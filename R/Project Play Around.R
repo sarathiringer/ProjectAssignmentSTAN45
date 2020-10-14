@@ -10,7 +10,8 @@ wage <- Wage %>%
   mutate(race_cat = case_when(race == "1. White" ~ "White",
                               race == "2. Black" ~ "Non-white",
                               race == "3. Asian" ~ "Non-white",
-                              race == "4. Other" ~ "Non-white"))
+                              race == "4. Other" ~ "Non-white")) %>% 
+  select(-race)
 
 # Setting aside test data
 set.seed(1)
@@ -18,6 +19,7 @@ split <- initial_split(wage, prop = 0.85)
 wage_train <- training(split)
 wage_test <- testing(split)
 
+resamples <- vfold_cv(wage_train, 5)
 # Check number of observations
 summary(wage_train$race)
 
@@ -65,3 +67,48 @@ wilcox.test(wage ~ race_cat, data = df)
 
 
 # Building a multiple regression model
+
+lr_mod <- 
+  linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+
+lr_rec <- 
+  recipe(wage ~ ., data = wage_train) %>%
+  step_bagimpute(everything()) %>%
+  step_dummy(all_nominal()) 
+
+# %>%
+#   step_nzv(everything(), -all_outcomes()) %>%
+#   step_normalize(everything(), -all_outcomes())
+
+lr_wf <- 
+  workflow() %>%
+  add_model(lr_mod) %>%
+  add_recipe(lr_rec)
+
+lr_res <- 
+  lr_wf %>% 
+  tune_grid(resamples = resamples,
+            metrics = metric_set(roc_auc, accuracy),
+            control = control_grid(save_pred = TRUE))
+
+lr_best <-
+  lr_res %>%
+  select_best(metric = "roc_auc")
+
+lr_roc <- 
+  lr_res %>% 
+  collect_predictions(parameters = lr_best) %>% 
+  roc_curve(Status, .pred_bad) %>% 
+  mutate(model = "regression")
+
+wage$region <- droplevels(wage$region)
+
+summary(fit <- lm(wage ~ maritl + education + jobclass + health + health_ins + age + race_cat, data = wage))
+
+wage$pred <- predict(fit)
+
+wage %>% group_by(race_cat) %>%
+  summarise(mean_pred = mean(pred))
+
