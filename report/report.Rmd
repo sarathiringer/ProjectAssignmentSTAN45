@@ -1,0 +1,64 @@
+---
+title: 'Investigating discrimination bias in predictive modelling'
+author:
+  - Jonathan Rittmo
+  - Sara Thiringer
+abstract: |
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur tempor quis
+ tellus in convallis. Etiam mattis est laoreet mi facilisis fringilla. Curabitur
+ sed tortor blandit, consectetur sem quis, posuere urna. Donec at sem turpis. Ut
+ nec lacus vitae nisl pretium varius non a sem. Cras venenatis rhoncus
+ facilisis. Curabitur viverra leo eu dui varius, ac hendrerit tellus maximus.
+ Duis nec ipsum feugiat, egestas tortor et, elementum felis. Donec sagittis nec
+ ante quis convallis. Aenean volutpat sem nec gravida ullamcorper. Ut vestibulum
+ elementum sem. Morbi a malesuada ipsum. Nam placerat neque diam, vel lobortis
+ diam dictum sed. Phasellus id urna ligula. Morbi mattis ex vel posuere mattis.
+ Sed viverra felis et suscipit tempor. Ut at ante vitae est tempus sodales.
+ Fusce condimentum in erat id dignissim. Nam hendrerit quis lorem quis
+ dignissim. Mauris quis arcu accumsan, tincidunt nunc id, scelerisque sapien.
+
+date: "`r Sys.Date()`"
+# bibliography: Dissertation.bib
+toc: false
+link-citations: yes
+linkcolor: blue
+numbersections: false
+indent: true
+csl: apa.csl
+output: 
+  bookdown::pdf_document2: default
+header-includes: |
+  \usepackage{setspace}\onehalfspacing
+  \usepackage{float}
+  \floatplacement{figure}{H}
+  \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+$\alpha = \beta$
+
+\begin{equation}
+\end{}
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
