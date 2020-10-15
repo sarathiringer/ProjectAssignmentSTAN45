@@ -28,7 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Introduction
 
 In this project we aim to evaluate methods that can account for discrimination bias
-in predictive models. This can for example happen when a data set on which the
+in predictive models. This can for example happen when a dataset on which the
 model is based is unbalanced with regards to a certain group, i.e. observations 
 are fewer. Bias can also be introduced in a model because the data reflect true
 discrimination bias in the population. Take an employee wage data set as an
@@ -56,5 +56,46 @@ other predictors in the model the bias can persist even after removal.
 * Identify a method for quantifying fairness and compare accuracy vs. fairness
   in different models and methods. 
 
-# Example 
+# Example datasets
+
+Since our aim is to evaluate methodology rather than to analyse a specific dataset
+the choice of data matters most in that we want sets where some bias is present.
+Examples include but are not limited to:
+
+* Glassdoor gender pay gap. A dataset containing wage data and demographic
+  from Glassdoor, along with education, field, seniority etc. [Source](https://www.kaggle.com/nilimajauhari/glassdoor-analyze-gender-pay-gap).
+
+* Silicon valley diversity data. Diversity of the workforce in Silicon Valley. [Source](https://www.kaggle.com/rtatman/silicon-valley-diversity-data).
+
+* Wages (not ISLR). Containing both gender and race. [Source](https://www.kaggle.com/ljanjughazyan/wages).
+
+* The Demographic /r/ForeverAlone Dataset (very imbalanced between sexes). [Source](https://www.kaggle.com/kingburrito666/the-demographic-rforeveralone-dataset).
+
+# Example analyses
+
+For continues wage data in the Glassdoor and Wages dataset the goal of the model
+would be to predict wages between gender and/or racial groups. This would be done
+using methods such as regression trees and neural nets. For the specific datasets 
+mentioned no additional modification of the sets would be needed except for taking 
+the log wage, due to the known skewness of such data. We would then compare
+methods such as averaging out differences before training the model or filtering
+non-representative observations (????). 
+
+For the Silicon Valley and ForeverAlone data sets classification models would be built
+using penalised logisitic regression and boosted classification trees. In the Silicon
+Valley set the type of job held by an observation would be predicted and in 
+the ForeverAlone set depression or attempt to commit suicide could be predicted.
+In both these sets women are severely underrepresented and would thus constitute
+the basis for our analysis of how to deal with such bias. 
+
+
+
+
+
+
+
+
+
+
+
 
