@@ -65,7 +65,38 @@ Examples include but are not limited to:
 
 # Example analyses
 
+## Demographic parity
 
+This criterion states that the target variable should be independent of
+problematic, let us call them "protected", variables (such as race and gender).
+In other words this means that if $Y$ is our decision and $X$ the problematic
+variable in question:
+$$
+P(Y=1 | X=1) = P(Y=1 | X=0)
+$$
+However, this makes sure we cannot use $X$ as a predictor which we in some
+circumstances want.
+
+## Equalised odds
+
+This criterion proposes that the predictor we use and the
+protected variable should be independent conditional on the outcome, i.e.
+if $G$ is the predictor we want to use:
+$$
+P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
+$$
+## Well-calibrated systems
+
+Similar to equalised odds, but this criterion propose that the *target*
+and the prtected variable are independent, conditional on the *predictor*.
+$$
+P(Y=1|X=0, G=1) = P(Y=1|X=1, G=1)
+$$
+
+Applying any of the above criteria will require careful consideration when
+choosing variables to be included in a given model and some accuracy must perhaps
+be sacrificed. We therefore wish to evaluate how well these criteria would fare
+when applied to different kinds of models and datasets. 
 
 Formulation of the main question that the project aims to answer.
 - How can we quantify fairness in order to be able to evaluate algorithmic fairness?
@@ -80,6 +111,42 @@ Approximate distribution of the efforts and tasks between members of the team.
 We plan to work together on both statistical analysis and report writing. We have set up a repository on GitHub in order to collaborate efficiently.
 
 
+# Example analyses
+
+Since applying the non-discrimiation criteria will require extensive work
+for each dataset what is given here is solely an example of how we might 
+tackle this issue for the /r/ForeverAlone dataset. This dataset consists
+of the variables of interest (I'm just listing all of them now but perhaps we should remove a few?):
+
+* `gender`
+* `sexuality`
+* `age`
+* `income`
+* `race`
+* `bodyweight`
+* `virgin`
+* `prostitution_legal`
+* `pay_for_sex`
+* `friends`
+* `social_fear`
+* `depressed`
+* `what_help_from_others`
+* `attempt_suicide`
+* `employment`
+* `job_title`
+* `edu_level`
+* `improve_yourself_how`
+
+In this analysis we want a model able to predict the risk of an individual
+attempting to commit suicide where `gender` is our protected variable. First 
+and foremost we would need to create synthetic data to even out the imbalance
+between gender groups. For simplicity, observations with other genders than male
+or female will be discarded in this example. This would be done by parametric
+bootstrapping of variables where distributions are estimated by the female sample 
+in the dataset. Since most variables are nominal with only a few levels most can
+be estimated with a binomial distribution.
+
+We would then need to look at the joint distributions of the variables of interest
 
 
 
