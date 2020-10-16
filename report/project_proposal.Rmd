@@ -92,12 +92,11 @@ when applied to different kinds of models and datasets.
 
 # Aim
 
-* Evaluate non-discrimination criteria for dealing with persisting discrimination bias.
-* Evaluate models using synthetic data.
-* Identify a method for quantifying fairness and compare accuracy vs. fairness
-  in different models and methods. 
+* Evaluate non-discrimination criteria and how the fare under various models and datasets.
+* Evaluate the performance of the used models when trained on synthetic data.
+* Identify a method for quantifying fairness and compare accuracy vs. fairness.
 
-# Example datasets
+# Example dataset
 
 Since our aim is to evaluate methodology rather than to analyse a specific dataset
 the choice of data matters most in that we want sets where some bias is present.
@@ -114,20 +113,40 @@ Examples include but are not limited to:
 
 # Example analyses
 
-For continues wage data in the Glassdoor and Wages dataset the goal of the model
-would be to predict wages between gender and/or racial groups. This would be done
-using methods such as regression trees and neural nets. For the specific datasets 
-mentioned no additional modification of the sets would be needed except for taking 
-the log wage, due to the known skewness of such data. We would then compare
-methods such as averaging out differences before training the model or filtering
-non-representative observations (????). 
+Since applying the non-discrimiation criteria will require extensive work
+for each dataset what is given here is solely an example of how we might 
+tackle this issue for the /r/ForeverAlone dataset. This dataset consists
+of the variables of interest (I'm just listing all of them now but perhaps we should remove a few?):
 
-For the Silicon Valley and ForeverAlone data sets classification models would be built
-using penalised logisitic regression and boosted classification trees. In the Silicon
-Valley set the type of job held by an observation would be predicted and in 
-the ForeverAlone set depression or attempt to commit suicide could be predicted.
-In both these sets women are severely underrepresented and would thus constitute
-the basis for our analysis of how to deal with such bias. 
+* `gender`
+* `sexuality`
+* `age`
+* `income`
+* `race`
+* `bodyweight`
+* `virgin`
+* `prostitution_legal`
+* `pay_for_sex`
+* `friends`
+* `social_fear`
+* `depressed`
+* `what_help_from_others`
+* `attempt_suicide`
+* `employment`
+* `job_title`
+* `edu_level`
+* `improve_yourself_how`
+
+In this analysis we want a model able to predict the risk of an individual
+attempting to commit suicide where `gender` is our protected variable. First 
+and foremost we would need to create synthetic data to even out the imbalance
+between gender groups. For simplicity, observations with other genders than male
+or female will be discarded in this example. This would be done by parametric
+bootstrapping of variables where distributions are estimated by the female sample 
+in the dataset. Since most variables are nominal with only a few levels most can
+be estimated with a binomial distribution.
+
+We would then need to look at the joint distributions of the variables of interest
 
 
 
