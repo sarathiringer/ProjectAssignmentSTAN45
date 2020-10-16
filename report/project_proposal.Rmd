@@ -27,35 +27,25 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In this project we aim to evaluate methods that can account for discrimination
-bias in predictive models. This can for example happen when a dataset on which
-the model is based is unbalanced with regards to a certain group, i.e.
-observations are fewer in one group compared to another. Bias can also be
-introduced in a model because the data reflect true discrimination bias in the
-population. Take an employee wage data set as an example. If a model, e.g.,
-predicts equal wages between two groups when all variables are available except
-for this specific grouping (say gender) have been taking into account but
-different wages when gender is introduced there is evidence of true bias.
+As more data and consequently more data-driven decisions have entered the world, the problem with algorithms reinforcing discriminatory structures have received an increasing amount of attention. Several cases showcase how algorithms that were designed to be neutral decision-makers have made discriminatory predictions. Examples include facial recognition being less accurate for people with darker skin (1), adds for higher paid jobs being shown more frequently to men (2), healthcare predictions underestimating the illness of black people (3) as well as individual tech company scandals such as the Apple card seemingly granting men a higher credit limit than women (4) and Amazon’s automated recruitment tool unrighteously favoring men (5). However unintentional, these examples show the need for an awareness of discrimination and fairness when collecting data, training models and using predictions for decision-making. 
 
-Common sources of similar bias in datasets are:
+# Aim
+
+In this project we therefore aim to evaluate methods that can account for discrimination bias in predictive models. Such discriminatory consequences can have many sources, such as imbalance in the dataset, correlations between variables of protected characteristics^[Protected carachteristics refers to human carachteristics by which poeple can be subject to discrimination. In Sweden, these are stated by the Discrimination Act (2008:567) and include sex, transgender identity or expression, ethnicity, religion or other belief, disability, sexual orientation or age.] caused by differences in demographics between groups or by previous discrimination such that human bias of protected characteristics have guided the labelling of the data. As such, bias can be introduced in a model because the data reflect direct discrimination bias in the population. As an example, consider an employee wage dataset. If a model, e.g., predicts equal wages between two groups when all variables are available except for this specific grouping (say gender) have been taken into account but different wages when gender is introduced there is evidence of direct discrimination. If the model predicts unequal wages despite removal of variables with protected carachteristics, this can be a sign of the carachteristics being correlated to other variables and hence imply indirect discrimination. 
+
+Common sources of discriminatory bias in datasets are:
 
 * Undersampled groups.
 * Having skewed samples.
 * Too few variables, i.e. a limitation of features for the model to train on.
-* True biases in the world.
+* Human bias having guided the labeling process
+* Uncontroversial predictors being correlated to protected carachteristics
 
-How should this be handled? The problem of imbalanced data could be tackled by
-using synthetic data, i.e. parametric bootstrapping of the original data set 
-to even out imbalance. But how do different modelling methods fare when they
-are being trained on such data?
+Based on what causes the discriminatory bias, the problem can be dealt with in different ways. We aim to investigate a couple of solutions. As an example, the problem of imbalanced data could be tackled by using synthetic data, i.e. parametric bootstrapping, of the original data set to even out imbalance. The questions remains how different models perform when being trained on such data.
 
-The second problem is more difficult. In the example given above the easy way
-to deal with such a problem is just to remove the biased variable for model 
-training. However, when the problematic variable is correlated with
-other predictors in the model the bias can persist even after removal.
+Other sources of discriminatory bias can be more difficult to deal with. In case of direct discrimination, remocing the biased variable for the model will most probably be enough. However, if the bias persists even after removal, we need to further inspect other variables and consider introducing penalties or removing correlation. There are several methods introduced in the course to do this, such as penalized regression or Random Forest-style bootstrapping and Principal Component Analysis in case of decorrelating variables. 
 
-One way to handle this is to build algorithms optimising for fairness.
-This is most often done by operationalising a non-discrimination criterion.
+In order to be able to evaluate these different methods, we need a measurable criterion for fairness. We could then build build algorithms in such a way that we optimise with regards to fairness.
 
 ## Demographic parity
 
@@ -90,11 +80,10 @@ choosing variables to be included in a given model and some accuracy must perhap
 be sacrificed. We therefore wish to evaluate how well these criteria would fare
 when applied to different kinds of models and datasets. 
 
-# Aim
+# Main question
 
-* Evaluate non-discrimination criteria and how the fare under various models and datasets.
-* Evaluate the performance of the used models when trained on synthetic data.
-* Identify a method for quantifying fairness and compare accuracy vs. fairness.
+* How can we quantify fairness in order to be able to evaluate algorithmic fairness?
+* What methods are available to increase algorithmic fairness? In what type of situations do they apply? (i.e. In what kind of situations can we expect them to be successful?)
 
 # Example dataset
 
