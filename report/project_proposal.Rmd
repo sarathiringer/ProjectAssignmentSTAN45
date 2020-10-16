@@ -27,15 +27,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In this project we aim to evaluate methods that can account for discrimination bias
-in predictive models. This can for example happen when a dataset on which the
-model is based is unbalanced with regards to a certain group, i.e. observations 
-are fewer. Bias can also be introduced in a model because the data reflect true
-discrimination bias in the population. Take an employee wage data set as an
-example. If a model, e.g., predicts equal wages between two groups when all
-variables are available except for this specific grouping (say gender) have been
-taking into account but different wages when gender is introduced there is
-evidence of true bias.
+In this project we aim to evaluate methods that can account for discrimination
+bias in predictive models. This can for example happen when a dataset on which
+the model is based is unbalanced with regards to a certain group, i.e.
+observations are fewer in one group compared to another. Bias can also be
+introduced in a model because the data reflect true discrimination bias in the
+population. Take an employee wage data set as an example. If a model, e.g.,
+predicts equal wages between two groups when all variables are available except
+for this specific grouping (say gender) have been taking into account but
+different wages when gender is introduced there is evidence of true bias.
+
+Common sources of similar bias in datasets are:
+
+* Undersampled groups.
+* Having skewed samples.
+* Too few variables, i.e. a limitation of features for the model to train on.
+* True biases in the world.
 
 How should this be handled? The problem of imbalanced data could be tackled by
 using synthetic data, i.e. parametric bootstrapping of the original data set 
