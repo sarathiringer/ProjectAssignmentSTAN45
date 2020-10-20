@@ -20,6 +20,7 @@ summary(wage3)
 # ISLR Wage
 library(ISLR)
 data(Wage)
+summary(Wage)
 
 # Data preparation
 
