@@ -1,0 +1,158 @@
+---
+title: 'Project Proposal'
+author:
+  - Jonathan Rittmo
+  - Sara Thiringer
+date: "`r Sys.Date()`"
+# bibliography: Dissertation.bib
+toc: false
+link-citations: yes
+linkcolor: blue
+numbersections: false
+indent: true
+csl: apa.csl
+output: 
+  bookdown::pdf_document2: default
+header-includes: |
+  \usepackage{setspace}\onehalfspacing
+  \usepackage{float}
+  \floatplacement{figure}{H}
+  \usepackage{amsmath}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this project we aim to evaluate methods that can account for discrimination
+bias in predictive models. Common sources of such bias in datasets are:
+
+* Undersampled groups.
+* Having skewed samples.
+* Too few variables, i.e. a limitation of features for the model to train on.
+* True biases in the world.
+
+How should this be handled (various weighting methods have been proposed)? What
+methods are available to be able to evaluate algorithmic fairness? Is there a
+difference between modelling methodology when these are applied? The problem of
+imbalanced data could be tackled by using synthetic data, i.e. parametric
+bootstrapping of the original data set to even out imbalance. But how do
+different modelling methods fare when they are being trained on such data?
+
+# Aim
+
+* Identify and apply methods to correct for discrimination bias.
+* Evaluate difference between modelling methodology when using synthetic 
+  data and when using other methods to handle inherent bias.
+
+# Example dataset
+
+Since our aim is to evaluate methodology rather than to analyse a specific dataset
+the choice of data matters most in that we want sets where some bias is present.
+Examples include but are not limited to:
+
+* Glassdoor gender pay gap. A dataset containing wage data and demographic
+  from Glassdoor, along with education, field, seniority etc. [Source](https://www.kaggle.com/nilimajauhari/glassdoor-analyze-gender-pay-gap).
+
+* Silicon valley diversity data. Diversity of the workforce in Silicon Valley. [Source](https://www.kaggle.com/rtatman/silicon-valley-diversity-data).
+
+* Wages (not ISLR). Containing both gender and race. [Source](https://www.kaggle.com/ljanjughazyan/wages).
+
+* The Demographic /r/ForeverAlone Dataset (very imbalanced between sexes). [Source](https://www.kaggle.com/kingburrito666/the-demographic-rforeveralone-dataset).
+
+# Example analyses
+
+## Demographic parity
+
+This criterion states that the target variable should be independent of
+problematic, let us call them "protected", variables (such as race and gender).
+In other words this means that if $Y$ is our decision and $X$ the problematic
+variable in question:
+$$
+P(Y=1 | X=1) = P(Y=1 | X=0)
+$$
+However, this makes sure we cannot use $X$ as a predictor which we in some
+circumstances want.
+
+## Equalised odds
+
+This criterion proposes that the predictor we use and the
+protected variable should be independent conditional on the outcome, i.e.
+if $G$ is the predictor we want to use:
+$$
+P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
+$$
+## Well-calibrated systems
+
+Similar to equalised odds, but this criterion propose that the *target*
+and the prtected variable are independent, conditional on the *predictor*.
+$$
+P(Y=1|X=0, G=1) = P(Y=1|X=1, G=1)
+$$
+
+Applying any of the above criteria will require careful consideration when
+choosing variables to be included in a given model and some accuracy must perhaps
+be sacrificed. We therefore wish to evaluate how well these criteria would fare
+when applied to different kinds of models and datasets. 
+
+Formulation of the main question that the project aims to answer.
+- How can we quantify fairness in order to be able to evaluate algorithmic fairness?
+- What methods are available to increase algorithmic fairness? In what type of situations do they apply? (i.e. In what kind of situations can we expect them to be successful?)
+Proposition of approaches to the problem and their rationales - based on the lectures and
+literature.
+Beror på varifrån bias uppstår, vilken typ av variabler vi jobbar med, men vi har föreslagit flera olika angreppssätt.
+Some discussion of how the data set should be prepared or modified to meet the requirements
+of the methods, if applicable.
+N/A lol
+Approximate distribution of the efforts and tasks between members of the team.
+We plan to work together on both statistical analysis and report writing. We have set up a repository on GitHub in order to collaborate efficiently.
+
+
+# Example analyses
+
+Since applying the non-discrimiation criteria will require extensive work
+for each dataset what is given here is solely an example of how we might 
+tackle this issue for the /r/ForeverAlone dataset. This dataset consists
+of the variables of interest (I'm just listing all of them now but perhaps we should remove a few?):
+
+* `gender`
+* `sexuality`
+* `age`
+* `income`
+* `race`
+* `bodyweight`
+* `virgin`
+* `prostitution_legal`
+* `pay_for_sex`
+* `friends`
+* `social_fear`
+* `depressed`
+* `what_help_from_others`
+* `attempt_suicide`
+* `employment`
+* `job_title`
+* `edu_level`
+* `improve_yourself_how`
+
+In this analysis we want a model able to predict the risk of an individual
+attempting to commit suicide where `gender` is our protected variable. First 
+and foremost we would need to create synthetic data to even out the imbalance
+between gender groups. For simplicity, observations with other genders than male
+or female will be discarded in this example. This would be done by parametric
+bootstrapping of variables where distributions are estimated by the female sample 
+in the dataset. Since most variables are nominal with only a few levels most can
+be estimated with a binomial distribution.
+
+We would then need to look at the joint distributions of the variables of interest
+
+
+
+
+
+
+
+
+
