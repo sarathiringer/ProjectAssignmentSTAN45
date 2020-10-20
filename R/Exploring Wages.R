@@ -36,6 +36,15 @@ wage1 <-
 ggplot(data = wage1, mapping = aes(x = high_wage, fill = race_cat)) +
   geom_bar(position = "fill")
 
+# Another way of plotting the differences
+ggplot(data = wage1, aes(high_wage, group = race_cat)) +
+  geom_bar(aes(y=..prop.., fill = factor(..x..)), stat = "count") +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies") +
+  facet_grid(~race_cat) +
+  theme(legend.position = "none")
+  
+
 # Pick out race, for evaluation
 race_cat <- wage1$race_cat
 
@@ -108,6 +117,13 @@ lr_pred %>%
   ggplot(aes(x = .pred_class)) +
   geom_bar() +
   facet_wrap(~race)
+
+ggplot(data = lr_pred, aes(.pred_class, group = race)) +
+  geom_bar(aes(y=..prop.., fill = factor(..x..)), stat = "count") +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies, predicted") +
+  facet_grid(~race) +
+  theme(legend.position = "none")
 
 lr_pred_white <- subset(lr_pred, race = "White")
 
