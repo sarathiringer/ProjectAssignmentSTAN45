@@ -45,13 +45,19 @@ ggplot(data = wage1, aes(high_wage, group = race_cat)) +
   theme(legend.position = "none")
   
 
-# Pick out race, for evaluation
-race_cat <- wage1$race_cat
+# Setting aside test data
+set.seed(42)
+split <- initial_split(wage1, prop = 0.85)
+wage_train <- training(split)
+race_cat_train <- wage_train$race_cat
+wage_test <- testing(split)
+race_cat_test <- wage_test$race_cat
 
 # Take away what we don't want for training
 wage_train <- 
-  wage1 %>% 
+  wage_train %>% 
   select(-c(race_cat, logwage, wage))
+
 
 
 # Tuned model
@@ -80,6 +86,7 @@ lr_res <-
   tune_grid(resamples = resamples,
             metrics = metric_set(roc_auc, accuracy),
             control = control_grid(save_pred = TRUE))
+
 lr_best <-
   lr_res %>%
   select_best(metric = "accuracy")
@@ -100,13 +107,12 @@ lr_pred <-
   lr_res %>% 
   collect_predictions(parameters = lr_best)
   
-lr_pred$race = wage1$race_cat
+lr_pred$race = race_cat_train
 
 accuracy(filter(lr_pred, race == "White"), truth = high_wage, estimate = .pred_class)
 
 accuracy(filter(lr_pred, race == "Black"), truth = high_wage, estimate = .pred_class)
 
-accuracy(filter(lr_pred, race == "White"), estimate = .pred_1)
 
 # Plot of counts of the different prediction classes
 lr_pred %>% 
@@ -145,7 +151,7 @@ lr_pred <-
   predict(lr_mod, wage_train)
   
 # Inspect result
-result_df <- data.frame(pred = lr_pred$.pred_class, true = wage1$high_wage, race = wage1$race_cat)
+result_df <- data.frame(pred = lr_pred$.pred_class, true = wage_train$high_wage, race = race_cat_train)
 table(result_df)
 
 ggplot(data = result_df, aes(pred, group = race)) +
@@ -156,4 +162,21 @@ ggplot(data = result_df, aes(pred, group = race)) +
   facet_grid(~race) +
   theme(legend.position = "none")
 
-corrplot::corrplot(cor(wage1[]))
+# predict on test set
+
+# Predict
+lr_pred_test <- 
+  predict(lr_mod, wage_test)
+
+# Inspect result
+result_tet_df <- data.frame(pred = lr_pred_test$.pred_class, true = wage_test$high_wage, race = race_cat_test)
+table(result_tet_df)
+
+ggplot(data = result_tet_df, aes(pred, group = race)) +
+  geom_bar(aes(y=..prop.., fill = factor(..x..)), stat = "count") +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies, predicted on test data") +
+  xlab("pred, no tuning") +
+  facet_grid(~race) +
+  theme(legend.position = "none")
+
