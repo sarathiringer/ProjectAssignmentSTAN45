@@ -148,4 +148,12 @@ lr_pred <-
 result_df <- data.frame(pred = lr_pred$.pred_class, true = wage1$high_wage, race = wage1$race_cat)
 table(result_df)
 
+ggplot(data = result_df, aes(pred, group = race)) +
+  geom_bar(aes(y=..prop.., fill = factor(..x..)), stat = "count") +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies, predicted") +
+  xlab("pred, no tuning") +
+  facet_grid(~race) +
+  theme(legend.position = "none")
 
+corrplot::corrplot(cor(wage1[]))
