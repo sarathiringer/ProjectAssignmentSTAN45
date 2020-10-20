@@ -33,11 +33,11 @@ the problem with algorithms reinforcing discriminatory structures have received
 an increasing amount of attention. Several cases showcase how algorithms that
 were designed to be neutral decision-makers have made discriminatory
 predictions. Examples include facial recognition being less accurate for people
-with darker skin [@buolamwini_gender_2018], adds for higher paid jobs being shown more frequently to
+with darker skin [@buolamwini_gender_2018], ads for higher paid jobs being shown more frequently to
 men [@datta_automated_2015], healthcare predictions underestimating the illness of black people [@obermeyer_dissecting_2019]
-as well as individual tech company scandals such as the Apple card seemingly
-granting men a higher credit limit than women (4) and Amazon’s automated
-recruitment tool unrighteously favoring men (5). However unintentional, these
+as well as individual tech company scandals such as [the Apple card seemingly
+granting men a higher credit limit than women](https://www.washingtonpost.com/business/2019/11/11/apple-card-algorithm-sparks-gender-bias-allegations-against-goldman-sachs/) and [Amazon’s automated
+recruitment tool unrighteously favoring men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G). However unintentional, these
 examples show the need for an awareness of discrimination and fairness when
 collecting data, training models and using predictions for decision-making.
 
@@ -123,4 +123,6 @@ Examples include but are not limited to:
 
 We plan to work together on both statistical analysis and report writing. We
 have set up a repository on GitHub in order to collaborate efficiently.
+
+# References
 
