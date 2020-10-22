@@ -246,7 +246,8 @@ plot(group_m)
 model_performance(knn_explainer)
 model_performance(lr_explainer)
 
-
+cpc <- ceteris_paribus_cutoff(fobject_knn_lr, "African_American")
+plot(cpc)
 
 #################################
 ###### MITIGATION ###############
@@ -399,3 +400,18 @@ fobject_knn_lr_mit <- fairness_check(knn_explainer, lr_explainer, knn_mit_explai
 
 print(fobject_knn_lr_mit)
 plot(fobject_knn_lr_mit)
+
+
+
+
+#############################
+###### RESAMPLING ###########
+#############################
+
+uniform_indexes <- resample(protected = compas_train$Ethnicity,
+                            y = y_numeric)
+
+
+resamples <- vfold_cv(compas_train[uniform_indexes, ], 5)
+
+
