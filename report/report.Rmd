@@ -51,17 +51,17 @@ as well as individual tech company scandals such as [the Apple card seemingly
 granting men a higher credit limit than women](https://www.washingtonpost.com/business/2019/11/11/apple-card-algorithm-sparks-gender-bias-allegations-against-goldman-sachs/) and [Amazon’s automated
 recruitment tool unrighteously favoring men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G). However unintentional, these
 examples show the need for an awareness of discrimination and fairness when
-collecting data, training models and using predictions for decision-making.  
+collecting data, training models and using predictions for decision-making.   
 
-In this project we have looked at methods for deadling with potential discrimination in models. First, we present x ways of measuring fairness in order to be able to evaluate it. In this part we also discuss different methods of dealing with bias. Secondly, we train several statistical models on a dataset were we know that discriminatory bias is present. We then use the R package *fairmodels* to evaluate how the model performed both in terms of accuracy and fairness. Lastly, we use a pre-processing bias mitigation method called impact disparate remover to reduce the presence of bias in the models. We evaluate the success of this tool and discuss it in relation to the different models.  
+In this project we have looked at methods for deadling with potential discrimination in models. First, we present x ways of measuring fairness in order to be able to evaluate it. In this part we also discuss different methods of dealing with bias. Secondly, we train several statistical models on a dataset were we know that discriminatory bias is present. We then use the R package *fairmodels* to evaluate how the model performed both in terms of accuracy and fairness. Lastly, we use a pre-processing bias mitigation method called impact disparate remover to reduce the presence of bias in the models. We evaluate the success of this tool and discuss it in relation to the different models.   
 
-For simplicity, this project focuses solely on classification methods. (maybe present more restrictions)  
+For simplicity, this project focuses solely on classification methods. (maybe present more restrictions)   
 
 [Something on terminology... Maybe small appendix.]  
 
 ## Understanding Fairness in Statistical Models
 
-In order to build models that are less discriminatory then previously mentioned examples have managed to be, we first need a way to measure fairness. In recent years, a lot of work have been put into defining fairness in a quantitive way. These different definitions, listed and explained below, implicate somewhat different views on what fairness really is. This discussion in ongoing and draws on previous social and legal research on equality and fairness.  
+In order to build models that are less discriminatory then previously mentioned examples have managed to be, we first need a way to measure fairness. In recent years, a lot of work have been put into defining fairness in a quantitive way. These different definitions, listed and explained below, implicate somewhat different views on what fairness really is. This ongoing discussion draws on previous social and legal research on equality and fairness.
 
 ### Quantifying Fairness
 
@@ -74,6 +74,10 @@ In order to build models that are less discriminatory then previously mentioned 
 #### Prediction
 
 ## Classification on the COMPAS Data
+
+### Models
+
+We trained five different models on the compas data. [Kanske typ en table?]
 
 ## Evaluation of Bias in Models
 
