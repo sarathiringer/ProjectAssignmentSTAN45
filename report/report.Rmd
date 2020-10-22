@@ -38,27 +38,45 @@ header-includes: |
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+As more data and consequently more data-driven decisions have entered the world,
+the problem with algorithms reinforcing discriminatory structures have received
+an increasing amount of attention. Several cases showcase how algorithms that
+were designed to be neutral decision-makers have made discriminatory
+predictions. Examples include facial recognition being less accurate for people
+with darker skin [@buolamwini_gender_2018], ads for higher paid jobs being shown more frequently to
+men [@datta_automated_2015], healthcare predictions underestimating the illness of black people [@obermeyer_dissecting_2019]
+as well as individual tech company scandals such as [the Apple card seemingly
+granting men a higher credit limit than women](https://www.washingtonpost.com/business/2019/11/11/apple-card-algorithm-sparks-gender-bias-allegations-against-goldman-sachs/) and [Amazon’s automated
+recruitment tool unrighteously favoring men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G). However unintentional, these
+examples show the need for an awareness of discrimination and fairness when
+collecting data, training models and using predictions for decision-making.  
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+In this project we have looked at methods for deadling with potential discrimination in models. First, we present x ways of measuring fairness in order to be able to evaluate it. In this part we also discuss different methods of dealing with bias. Secondly, we train several statistical models on a dataset were we know that discriminatory bias is present. We then use the R package *fairmodels* to evaluate how the model performed both in terms of accuracy and fairness. Lastly, we use a pre-processing bias mitigation method called impact disparate remover to reduce the presence of bias in the models. We evaluate the success of this tool and discuss it in relation to the different models.  
 
-$\alpha = \beta$
+For simplicity, this project focuses solely on classification methods. (maybe present more restrictions)  
 
-\begin{equation}
-\end{}
+[Something on terminology... Maybe small appendix.]  
 
-```{r cars}
-summary(cars)
-```
+## Understanding Fairness in Statistical Models
 
-## Including Plots
+In order to build models that are less discriminatory then previously mentioned examples have managed to be, we first need a way to measure fairness. In recent years, a lot of work have been put into defining fairness in a quantitive way. These different definitions, listed and explained below, implicate somewhat different views on what fairness really is. This discussion in ongoing and draws on previous social and legal research on equality and fairness.  
 
-You can also embed plots, for example:
+### Quantifying Fairness
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+### Optimising for Fairness
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#### Pre-Processing
+
+#### Training
+
+#### Prediction
+
+## Classification on the COMPAS Data
+
+## Evaluation of Bias in Models
+
+## Disparate Impact Remover
+
+## Final Discussion

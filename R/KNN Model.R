@@ -1,5 +1,4 @@
 
-install.packages('fairmodels')
 library(fairmodels)
 library(tidymodels)
 library(DALEX)
@@ -18,22 +17,22 @@ split <- initial_split(compas, prop = 0.8, strata = "Two_yr_Recidivism")
 compas_test <- testing(split)
 
 test_ethnicity <-
-  compas_test %>% 
+  compas_test %>%
   select(Ethnicity)
 
-compas_test <- 
-  compas_test %>% 
-  select(-Ethnicity)
+# compas_test <- 
+#   compas_test %>% 
+#   select(-Ethnicity)
 
 compas_train <- training(split)
 
 train_ethnicity <-
-  compas_train %>% 
+  compas_train %>%
   select(Ethnicity)
 
-compas_train <- 
-  compas_train %>% 
-  select(-Ethnicity)
+# compas_train <- 
+#   compas_train %>% 
+#   select(-Ethnicity)
 
 resamples <- vfold_cv(compas_train, 5)
 
@@ -87,14 +86,20 @@ knn_results <-
   knn_res %>% 
   collect_predictions(parameters = knn_best)
 
-model_fitted <- 
-  knn_wf %>%
+final_wf <-
+  finalize_workflow(knn_wf, knn_best)
+
+# Fit 
+knn_fitted <- 
+  final_wf %>% 
   fit(data = compas_train)
+
+
 
 ##### Bias evaluation
 
 # Dataframe prep
-pred <- data.frame(knn_results, ethnicity = train_ethnicity)
+pred <- data.frame(knn_results, train_ethnicity)
 
 # Quick vis
 ggplot(data = pred, aes(.pred_class, group = Ethnicity)) +
@@ -105,11 +110,42 @@ ggplot(data = pred, aes(.pred_class, group = Ethnicity)) +
   facet_grid(~Ethnicity) +
   theme(legend.position = "none")
 
-# Group confusion matrix
-group_matrices(protected = pred$Ethnicity, probs = ".pred_1", preds = pred$.pred_1, cutoff = 0.5)
+
+# Create explainer by DALEX
+knn_explainer <- explain_tidymodels(knn_fitted, data = compas_train[,-1], y = as.numeric(compas_train$Two_yr_Recidivism))
+
+# Fairnes object
+knn_fobject <- fairness_check(knn_explainer,
+                             protected = compas_train$Ethnicity,
+                             privileged = 'Caucasian')
+
+# Insepct fairness
+print(knn_fobject)
+plot(knn_fobject)
+
+# Metric scores
+ms_knn <- metric_scores(knn_fobject)
+plot(ms_knn)
+
+# Performance and fairness
+paf_knn <- performance_and_fairness(knn_fobject)
+plot(paf_knn)
+
+# All cut_offs
+ac <- all_cutoffs(knn_fobject,
+                  fairness_metrics = c("TPR",
+                                       "FPR"))
+plot(ac)
 
 
 
+gm_knn <- group_matrices(protected = as.vector(compas_train$Ethnicity), 
+                         probs = "pred_1", 
+                         preds = as.vector(pred$.pred_class), 
+                         cutoff = 0.5)
+
+
+gm_knn <- group_metric(knn_fobject)
 
 
 
