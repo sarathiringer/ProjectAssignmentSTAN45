@@ -33,6 +33,8 @@ wage1 <-
   select(-race) %>% 
   na.omit()
 
+write.csv(wage1, "wage1.csv")
+
 # Check difference
 ggplot(data = wage1, mapping = aes(x = high_wage, fill = race_cat)) +
   geom_bar(position = "fill")
@@ -114,6 +116,7 @@ accuracy(filter(lr_pred, race == "White"), truth = high_wage, estimate = .pred_c
 
 accuracy(filter(lr_pred, race == "Black"), truth = high_wage, estimate = .pred_class)
 
+head(wage1)
 
 # Plot of counts of the different prediction classes
 lr_pred %>% 
@@ -180,4 +183,6 @@ ggplot(data = result_tet_df, aes(pred, group = race)) +
   xlab("pred, no tuning") +
   facet_grid(~race) +
   theme(legend.position = "none")
+
+
 
