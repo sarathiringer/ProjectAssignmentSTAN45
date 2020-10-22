@@ -18,24 +18,22 @@ split <- initial_split(compas, prop = 0.8, strata = "Two_yr_Recidivism")
 compas_test <- testing(split)
 
 test_ethnicity <-
-  compas_test %>% 
-  select(Ethnicity) %>% 
-  mutate(as.factor(Ethnicity))
+  compas_test %>%
+  select(Ethnicity) 
 
-compas_test <- 
-  compas_test %>% 
-  select(-Ethnicity)
+# compas_test <- 
+#   compas_test %>% 
+#   select(-Ethnicity)
 
 compas_train <- training(split)
 
 train_ethnicity <-
-  compas_train %>% 
-  select(Ethnicity) %>% 
-  mutate(as.factor(Ethnicity))
-
-compas_train <- 
-  compas_train %>% 
-  select(-Ethnicity)
+  compas_train %>%
+  select(Ethnicity) 
+#
+# compas_train <- 
+#   compas_train %>% 
+#   select(-Ethnicity)
 
 resamples <- vfold_cv(compas_train, 5)
 
@@ -48,7 +46,8 @@ lr_mod <-
 
 lr_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train) %>% 
-  step_bagimpute(everything(), all_outcomes()) %>% 
+  step_rm(Ethnicity) %>% 
+  step_bagimpute(everything(), -all_outcomes()) %>% 
   step_dummy(all_nominal(), -all_outcomes()) %>%
   step_nzv(everything(), -all_outcomes()) %>%
   step_normalize(everything(), -all_outcomes())
@@ -90,17 +89,20 @@ lr_results <-
   lr_res %>% 
   collect_predictions(parameters = lr_best)
 
-model_fitted <- 
-  lr_wf %>%
+final_wf <-
+  finalize_workflow(lr_wf, lr_best)
+
+# Fit 
+lr_fitted <- 
+  final_wf %>% 
   fit(data = compas_train)
 
-# final_wf <- 
-#   finalize_workflow(lr_wf, lr_best)
+
 
 ##### Bias evaluation
 
 # Dataframe prep
-pred <- data.frame(lr_results, ethnicity = train_ethnicity)
+pred <- data.frame(lr_results, train_ethnicity)
 
 # Quick vis
 ggplot(data = pred, aes(.pred_class, group = Ethnicity)) +
@@ -111,42 +113,45 @@ ggplot(data = pred, aes(.pred_class, group = Ethnicity)) +
   facet_grid(~Ethnicity) +
   theme(legend.position = "none")
 
-# Create explainer by DALEX
-lr_explainer <- explain_tidymodels(model_fitted, data = compas_train[,-1], y = as.numeric(compas_train$Two_yr_Recidivism))
+# fairmodels
 
-fobject <- fairness_check(lr_explainer,
-                          protected = train_ethnicity,
+# Create explainer by DALEX
+lr_explainer <- explain_tidymodels(lr_fitted, data = compas_train[,-1], y = as.numeric(compas_train$Two_yr_Recidivism))
+
+# Fairnes object
+lr_fobject <- fairness_check(lr_explainer,
+                          protected = compas_train$Ethnicity,
                           privileged = 'Caucasian')
 
 
+print(lr_fobject)
+plot(lr_fobject)
+plot(metric_scores(lr_fobject))
 
-# Exempel från dokumentationen
-### EXAMPLE
 
 summary(compas_train)
 
-compas_train$Sex <- as.factor(ifelse(compas_train$Sex == "Female", 1, 0))
+
 
 y_numeric <- as.numeric(compas_train$Two_yr_Recidivism) - 1
 
-lr_model <- glm(Two_yr_Recidivism~.,
+lr_model <- glm(Two_yr_Recidivism~.-Ethnicity,
                 data = compas_train,
-                family=binomial(link="logit"))
+                family="binomial")
+summary(lr_model)
 
 explainer_lr <- DALEX::explain(lr_model, data = compas_train[,-1], y = y_numeric)
 
 fobject_lr <- fairness_check(explainer_lr,
-                          protected = train_ethnicity,
-                          privileged = "Caucasian")
+                             protected = compas_train$Ethnicity,
+                             privileged = 'Caucasian')
 
 plot(fobject_lr)
 
 
-glm_compas <- glm(Two_yr_Recidivism~., data=compas_train, family=binomial(link="logit"))
+# Group matrices
 
-y_prob <- glm_compas$fitted.values
-
-y_numeric <- as.numeric(compas_train$Two_yr_Recidivism) - 1
+y_prob <- lr_model$fitted.values
 
 gm <- group_matrices(compas_train$Ethnicity,
                      y_prob,
@@ -158,7 +163,9 @@ gm <- group_matrices(compas_train$Ethnicity,
                                    Caucasian = 0.4,
                                    Native_American = 0.5))
 
-gm # FP är allvarligast, skulle kunna plottas
+gm
+
+
 
 
 
