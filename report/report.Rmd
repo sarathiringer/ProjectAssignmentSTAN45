@@ -38,27 +38,94 @@ header-includes: |
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+As more data and consequently more data-driven decisions have entered the world,
+the problem with algorithms reinforcing discriminatory structures have received
+an increasing amount of attention. Several cases showcase how algorithms that
+were designed to be neutral decision-makers have made discriminatory
+predictions. Examples include facial recognition being less accurate for people
+with darker skin [@buolamwini_gender_2018], ads for higher paid jobs being shown more frequently to
+men [@datta_automated_2015], healthcare predictions underestimating the illness of black people [@obermeyer_dissecting_2019]
+as well as individual tech company scandals such as [the Apple card seemingly
+granting men a higher credit limit than women](https://www.washingtonpost.com/business/2019/11/11/apple-card-algorithm-sparks-gender-bias-allegations-against-goldman-sachs/) and [Amazon’s automated
+recruitment tool unrighteously favoring men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G). However unintentional, these
+examples show the need for an awareness of discrimination and fairness when
+collecting data, training models and using predictions for decision-making.   
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+In this project we have looked at methods for deadling with potential discrimination in models. First, we present x ways of measuring fairness in order to be able to evaluate it. In this part we also discuss different methods of dealing with bias. Secondly, we train several statistical models on a dataset were we know that discriminatory bias is present. We then use the R package *fairmodels* to evaluate how the model performed both in terms of accuracy and fairness. Lastly, we use a pre-processing bias mitigation method called impact disparate remover to reduce the presence of bias in the models. We evaluate the success of this tool and discuss it in relation to the different models.   
 
-$\alpha = \beta$
+For simplicity, this project focuses solely on classification methods. (maybe present more restrictions)   
 
-\begin{equation}
-\end{}
+[Something on terminology... Maybe small appendix.]  
 
-```{r cars}
-summary(cars)
-```
+## Understanding Fairness in Statistical Models
 
-## Including Plots
+In order to build models that are less discriminatory than previously mentioned examples have proven to be, we first need a way to measure fairness. In recent years, a lot of work have been put into defining fairness in a quantitive way for machine learning purposes. These different definitions, listed and explained below, implicate somewhat different views on what fairness really is. This ongoing discussion draws on previous social and legal research on equality and fairness.
 
-You can also embed plots, for example:
+### Quantifying Fairness
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+## Demographic parity
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+This criterion states that the target variable should be independent of "protected" carachteristics (such as race and gender). This means that if $Y$ is our decision and $X$ the protected variable in question:
+$$
+P(Y=1 | X=1) = P(Y=1 | X=0)
+$$
+This rule will enhance rules which classify the same fraction in each group as positive. This might appear unappealing, as it has a way of "forcing" equality. However, as @goel_non-discriminatory_2018 point out, many classifiers impact decisions which create future labels in future training data, and as such a lack of demographic parity risks causing ever-looping cycles of discrimination. Another negative with this measure, however, is that it makes sure we cannot use $X$ as a predictor which we in some circumstances want. 
+
+## Equalised odds
+
+This criterion proposes that the predictor we use and the
+protected variable should be independent conditional on the true outcome, i.e.
+if $G$ is the predictor we want to use:
+$$
+P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
+$$
+This measure ensures that the true positive rates of the classifier are the same for both groups of $X$.
+
+## Well-calibrated systems
+
+Similar to equalised odds, but this criterion propose that the *target*
+and the protected variable are independent, conditional on the *predictor*.
+$$
+P(Y=1|X=0, G=1) = P(Y=1|X=1, G=1)
+$$
+
+Applying any of the above criteria will requires careful consideration when
+choosing variables to be included in a given model. Different measures and subsequent tuning of models might impact accuracy, which is something that we are going to try to evaluate. It's important to note, however, that the accuracy is likely to be biased as well, due to historical bias.
+
+### Optimising for Fairness
+
+As we already know, statistical learning may have other goals than just maximizing accuracy. For example, different costs for different types of misclassificaiton may lead us to choose a different model than the one that has the highest overall accuracy rate [@james_islr_2013]. Tuning for a higher rate of fairness introduces yet another way to both pre-process data, train models and make predictions. Since discimrinatory bias can be introduced in several different ways and different stages of a model training, there are several methods to optimize for fairness.
+
+#### Pre-Processing
+
+Since discrimination may have been present in both data collection and the systems (institutions, products, etc) that generated data, we might wna to deal with the issue already in the pre-processing stage. Attempts to do this includes resampling and synthesizing data. For example, one approach with several suggested algorithms proposes mapping the datapoints to a new feature space were as much relevant information as possible is kept while information about the protected variable is lost [@zemel_lfr_2013, @feng_adversial_2019, @creager_learningrep_2019]. Resampling, a technique commonly used to deal with undersampled groups or otherwise skewed data, have also proven to be an alternative for moderating discrimination in statistical learning. @kamiran_calders_preprocessing_2011 suggests reweighting and resampling observations so as to enhance the presence of an initially undersampled groups (for example high income women). 
+
+#### Training
+
+Naturally, many methods for mitigating discrimination by algorithms focus on the training phase of statistical learning. From avoiding overfitting, we know how to constrain the learning by penalizing learned parameters and thus restraining them from having an unproportionally large impact in a classifier. Amongst classical such apporach ridge and lasso regression can be mentioned [@hastie_elements_2009]. Bias have been shown to sometimes remain in models despite the removal of the protected attribute, due to their correlation to other non-sensitive attributes (källa). In this sense, penalizing variables that are highly correlated to protected features looks like a promising solution. 
+
+A similar approach, also focusing on the learning phase, is the *weighted sum of logs technique* propsed by [@goel_non-discriminatory_2018]. This algorithm models both the historical bias in the data and emprical bias imposed by the original algorithm in order to establish a "poportionally fair" classifier by restricting the optimization space of a logistic regression model. 
+
+posing constraint in the learning phse, dealing with correlations, penalty
+
+It has even been suggested that one solution could be to build a multiple of models - i.e. one for each social group. Such an approach have proved to be succesful in some cases [@calders_verwer_2010], but has a clear disatvantage when it comes to dealing with multiple (intertwined) protected variables. 
+
+#### Prediction
+
+Finally, another way to remove discriminatory outcomes is by post-processing the predictions. For example, we normally calculate the best possible cut-off value with regards to accuracy in classificaiotn models (@hastie_elements_2009). Instead of only optimising for accuracy, we could include a measure on fairness and have it play a role in the decision of the threshold value. Another similar techinique is to modify the cut-off value differently for each group, as proposed by @hardt_equality_2018, although they do point out that a better option is to first "invest in better features and more data". A benefit to this approach is that it is much less complex and hence has a more straight-forward implementation than many of the previously mentioned techinques.
+
+## Classification on the COMPAS Data
+
+The case we have selected to use for building statistical learning models, evaluating their discrimintion bias and furthermore mitigating these effects, is the compas[^Correctional Offender Management Profiling for Alternative Sanctions] data made available by Florida Department of Corrections and ProPublica in 2016. The dataset is a collection of $n = 5278$ observations including the decisions made by the COMPAS support tool used by U.S. courts to estimate the likelihood of recidivism of offenders. As such, it is being used to decide on the penalty of criminals. The compas data is an excellent case for studying discriminatory algorithms, as it both exhibits bias and is being used for actual classification for a highly sensitive cause. Because of this, many researcher who explore fairness in machine learning have chosen to study it as an example.  
+
+### Models
+
+We trained five different models on the compas data. [Kanske typ en table?]
+
+## Evaluation of Bias in Models
+
+## Disparate Impact Remover
+
+## Final Discussion
