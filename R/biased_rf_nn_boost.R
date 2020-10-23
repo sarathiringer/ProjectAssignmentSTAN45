@@ -607,8 +607,17 @@ plot(fap)
 # print(fobject, colorize = FALSE)
 
 
+plot(ceteris_paribus_cutoff(fobject_test,
+                            subgroup = "African_American",
+                            fairness_metrics = c("STP")))
 
 
+fobject_test <- fairness_check(rf_explainer, nn_explainer, boost_explainer,
+                          protected = compas_train$Ethnicity,
+                          privileged = 'Caucasian',
+                          verbose = FALSE,
+                          colorize = FALSE)
 
-
-
+fc <- fairness_check(fobject_test,
+                     cutoff = list("African_American" = 0.25),
+                     verbose = FALSE)
