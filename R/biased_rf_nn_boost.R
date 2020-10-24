@@ -33,8 +33,8 @@ rf_mod <-
   set_mode("classification")
 
 rf_rec <- 
-  recipe(Two_yr_Recidivism ~., data = compas_train) %>%
-  step_bagimpute(everything()) %>%
+  recipe(Two_yr_Recidivism ~., data = compas_train)  %>%
+  # step_bagimpute(everything()) %>%
   step_nzv(everything(), -all_outcomes())
 
 rf_wf <- 
@@ -51,7 +51,6 @@ rf_res <-
 rf_best <-
   rf_res %>% 
   select_best(metric = "accuracy")
-
 
 # finalize workflow
 final_wf <- 
@@ -84,7 +83,7 @@ nn_mod <-
 
 nn_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_dummy(Sex, Ethnicity, Age_Above_FourtyFive,
              Age_Below_TwentyFive, Misdemeanor) %>%
   step_nzv(everything(), -all_outcomes()) %>%
@@ -136,7 +135,7 @@ lr_mod <-
 
 lr_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train) %>% 
-  step_bagimpute(everything(), all_outcomes()) %>% 
+  #step_bagimpute(everything(), all_outcomes()) %>% 
   step_dummy(all_nominal(), -all_outcomes()) %>%
   step_nzv(everything(), -all_outcomes()) %>%
   step_normalize(everything(), -all_outcomes())
@@ -243,7 +242,7 @@ boost_explainer <- DALEX::explain(boost_fit, data = compas_train[,-1],
 
 
 
-fobject <- fairness_check(rf_explainer, nn_explainer, boost_explainer, lr_explainer, #knn_explainer,
+fobject1 <- fairness_check(rf_explainer, nn_explainer, boost_explainer, lr_explainer, #knn_explainer,
                           protected = compas_train$Ethnicity,
                           privileged = 'Caucasian',
                           verbose = FALSE,
@@ -296,7 +295,7 @@ rf_mod <-
 
 rf_rec <- 
   recipe(Two_yr_Recidivism ~., data = compas_train_mit) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_nzv(everything(), -all_outcomes())
 
 rf_wf <- 
@@ -331,7 +330,7 @@ rf_fit <-
 
 rf_explainer_mit <- explain_tidymodels(rf_fit, data = compas_train_mit[,-1],
                                    y = y_numeric,
-                                   label = "RF mit")
+                                   label = "RF rem")
 
 # rf_compas <- ranger(Two_yr_Recidivism ~., data = compas, probability = TRUE)
 # rf_explainer <- DALEX::explain(rf_compas, data = compas[,-1], y = as.numeric(compas$Two_yr_Recidivism)-1, colorize = FALSE)
@@ -351,7 +350,7 @@ nn_mod <-
 
 nn_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train_mit) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_dummy(Sex, Ethnicity, Age_Above_FourtyFive,
              Age_Below_TwentyFive, Misdemeanor) %>%
   step_nzv(everything(), -all_outcomes()) %>%
@@ -389,7 +388,7 @@ nn_fit <-
 
 nn_explainer_mit <- explain_tidymodels(nn_fit, data = compas_train_mit[,-1],
                                    y = y_numeric,
-                                   label = "ANN Mit")
+                                   label = "ANN rem")
 
 rm(nn_mod, nn_rec, nn_roc, nn_wf, nn_res, final_nn_wf, nn_best)
 
@@ -406,7 +405,7 @@ lr_mod <-
 
 lr_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train_mit) %>% 
-  step_bagimpute(everything(), all_outcomes()) %>% 
+  #step_bagimpute(everything(), all_outcomes()) %>% 
   step_dummy(all_nominal(), -all_outcomes()) %>%
   step_nzv(everything(), -all_outcomes()) %>%
   step_normalize(everything(), -all_outcomes())
@@ -438,7 +437,7 @@ lr_fit <-
 lr_explainer_mit <- explain_tidymodels(lr_fit,
                                    data = compas_train_mit[,-1],
                                    y = y_numeric, 
-                                   label = "LR mit")
+                                   label = "LR rem")
 rm(lr_mod, lr_rec, lr_wf, lr_res, final_lr_wf, lr_best)
 
 #######################
@@ -498,7 +497,7 @@ boost_fit <- gbm(Two_yr_Recidivism~., data = df)
 
 boost_explainer_mit <- DALEX::explain(boost_fit, data = compas_train_mit[,-1],
                                   y = y_numeric,
-                                  label = "AdaBoost mit")
+                                  label = "AdaBoost rem")
 
 
 
@@ -509,7 +508,7 @@ boost_explainer_mit <- DALEX::explain(boost_fit, data = compas_train_mit[,-1],
 
 
 
-fobject <- fairness_check(fobject,
+fobject <- fairness_check(fobject1,
                           rf_explainer_mit, nn_explainer_mit, boost_explainer_mit,
                           lr_explainer_mit, #knn_explainer_mit,
                           protected = compas_train$Ethnicity,
@@ -567,7 +566,7 @@ rf_mod <-
 
 rf_rec <- 
   recipe(Two_yr_Recidivism ~., data = compas_train[uniform_indexes, ]) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_nzv(everything(), -all_outcomes())
 
 rf_wf <- 
@@ -603,7 +602,7 @@ rf_fit <-
 
 rf_explainer_resa_uni <- explain_tidymodels(rf_fit, data = compas_train[,-1],
                                    y = y_numeric,
-                                   label = "RF resa uni")
+                                   label = "RF resa unif")
 
 # rf_compas <- ranger(Two_yr_Recidivism ~., data = compas, probability = TRUE)
 # rf_explainer <- DALEX::explain(rf_compas, data = compas[,-1], y = as.numeric(compas$Two_yr_Recidivism)-1, colorize = FALSE)
@@ -623,7 +622,7 @@ nn_mod <-
 
 nn_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train[uniform_indexes, ]) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_dummy(Sex, Ethnicity, Age_Above_FourtyFive,
              Age_Below_TwentyFive, Misdemeanor) %>%
   step_nzv(everything(), -all_outcomes()) %>%
@@ -667,7 +666,7 @@ nn_fit <-
 
 nn_explainer_resa_uni <- explain_tidymodels(nn_fit, data = compas_train[,-1],
                                    y = y_numeric,
-                                   label = "ANN resa uni")
+                                   label = "ANN resa unif")
 
 rm(nn_mod, nn_rec, nn_roc, nn_wf, nn_res, final_nn_wf, nn_best)
 
@@ -684,7 +683,7 @@ lr_mod <-
 
 lr_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train[uniform_indexes, ]) %>% 
-  step_bagimpute(everything(), all_outcomes()) %>% 
+  #step_bagimpute(everything(), all_outcomes()) %>% 
   step_dummy(all_nominal(), -all_outcomes()) %>%
   step_nzv(everything(), -all_outcomes()) %>%
   step_normalize(everything(), -all_outcomes())
@@ -716,7 +715,7 @@ lr_fit <-
 lr_explainer_resa_uni <- explain_tidymodels(lr_fit,
                                        data = compas_train[,-1],
                                        y = y_numeric, 
-                                       label = "LR resa uni")
+                                       label = "LR resa unif")
 rm(lr_mod, lr_rec, lr_wf, lr_res, final_lr_wf, lr_best)
 
 #######################
@@ -776,7 +775,7 @@ boost_fit <- gbm(Two_yr_Recidivism~., data = df)
 
 boost_explainer_resa_uni <- DALEX::explain(boost_fit, data = compas_train[,-1],
                                   y = y_numeric,
-                                  label = "AdaBoost resa uni")
+                                  label = "AdaBoost resa unif")
 
 
 
@@ -822,7 +821,7 @@ rf_mod <-
 
 rf_rec <- 
   recipe(Two_yr_Recidivism ~., data = compas_train[pref_ind, ]) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_nzv(everything(), -all_outcomes())
 
 rf_wf <- 
@@ -878,7 +877,7 @@ nn_mod <-
 
 nn_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train[pref_ind, ]) %>%
-  step_bagimpute(everything()) %>%
+  # step_bagimpute(everything()) %>%
   step_dummy(Sex, Ethnicity, Age_Above_FourtyFive,
              Age_Below_TwentyFive, Misdemeanor) %>%
   step_nzv(everything(), -all_outcomes()) %>%
@@ -939,7 +938,7 @@ lr_mod <-
 
 lr_rec <- 
   recipe(Two_yr_Recidivism ~ ., data = compas_train[pref_ind, ]) %>% 
-  step_bagimpute(everything(), all_outcomes()) %>% 
+  #step_bagimpute(everything(), all_outcomes()) %>% 
   step_dummy(all_nominal(), -all_outcomes()) %>%
   step_nzv(everything(), -all_outcomes()) %>%
   step_normalize(everything(), -all_outcomes())
@@ -1042,21 +1041,51 @@ boost_explainer_resa_pref <- DALEX::explain(boost_fit, data = compas_train[,-1],
 
 
 
-fobject <- fairness_check(fobject, rf_explainer_resa_pref, nn_explainer_resa_pref,
+fobject_all <- fairness_check(fobject, rf_explainer_resa_pref, nn_explainer_resa_pref,
                           boost_explainer_resa_pref, lr_explainer_resa_pref, #knn_explainer_resa_pref,
                           verbose = FALSE,
                           colorize = FALSE)
 
 
-fap <- performance_and_fairness(fobject, fairness_metric = "STP")
-plot(fap)
+save(fobject1, file = "report/models/fobject1.Rdata")
+save(fobject_all, file = "report/models/fobject_all.Rdata")
 
+
+
+fobject_rfs <- fairness_check(rf_explainer_resa_pref,
+                               protected = compas_train$Ethnicity,
+                               privileged = 'Caucasian',
+                               verbose = FALSE,
+                               colorize = FALSE)
+save(fobject_rfs, file = "report/models/fobject_rfs.Rdata")
+
+plot(ceteris_paribus_cutoff(fobject_rfs,
+                            subgroup = "African_American",
+                            fairness_metrics = c("TPR","STP")))
+
+
+
+rf_comp <- fairness_check(rf_explainer_resa_pref, rf_explainer_resa_uni,
+                          rf_explainer,
+                          protected = compas_train$Ethnicity,
+                          privileged = 'Caucasian',
+                          verbose = FALSE,
+                          colorize = FALSE)
+rf_comp <- fairness_check(rf_comp, rf_explainer_resa_pref, 
+                          label = "RF cutoff",
+                          protected = compas_train$Ethnicity,
+                          privileged = 'Caucasian',
+                          cutoff = list("African_American" = 0.42),
+                          verbose = FALSE,
+                          colorize = FALSE)
+
+save(rf_comp, file = "report/models/rf_comp.Rdata")
 
 
 #plot(fobject)
 
-cm <- choose_metric(fobject, "TPR")
-plot(cm)
+# cm <- choose_metric(fobject, c("TPR"))
+# plot(cm)
 
 
 # sm <- stack_metrics(fobject)
@@ -1070,39 +1099,8 @@ plot(cm)
 # fheatmap <- fairness_heatmap(fobject)
 # plot(fheatmap, text_size = 3)
 
-fap <- performance_and_fairness(fobject, fairness_metric = "STP")
-plot(fap)
-
 
 # model_performance(rf_explainer)
 # print(fobject, colorize = FALSE)
 
 
-
-
-fobject_test <- fairness_check(rf_explainer_resa_pref, rf_explainer_resa_uni,
-                          protected = compas_train$Ethnicity,
-                          privileged = 'Caucasian',
-                          verbose = FALSE,
-                          colorize = FALSE)
-
-plot(ceteris_paribus_cutoff(fobject_test,
-                            subgroup = "African_American",
-                            fairness_metrics = c("ACC","TPR","STP")))
-
-fc <- fairness_check(rf_explainer_resa_pref, rf_explainer_resa_uni,
-                     #label = c("RF resa pref", "ANN_cutoff"),
-                     protected = compas_train$Ethnicity,
-                     privileged = 'Caucasian',
-                     cutoff = list("African_American" = 0.5),
-                     verbose = FALSE)
-fap <- performance_and_fairness(fc, fairness_metric = "STP")
-plot(fap)
-
-rf_fair <- fairness_check(rf_explainer_resa_pref,
-                          protected = compas_train$Ethnicity,
-                          privileged = 'Caucasian',
-                          cutoff = list("African_American" = 0.445),
-                          verbose = FALSE)
-plot(rf_fair)
-model_performance(rf_explainer_resa_pref, cutoff = 0.445)

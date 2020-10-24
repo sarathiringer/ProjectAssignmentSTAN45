@@ -4,14 +4,13 @@ author:
   - Jonathan Rittmo
   - Sara Thiringer
 date: "`r Sys.Date()`"
-# bibliography: Dissertation.bib
+csl: apa.csl
+bibliography: references.bib
 toc: false
 link-citations: yes
 linkcolor: blue
 numbersections: false
-bibliography: references.bib
 indent: true
-csl: apa.csl
 output: 
   bookdown::pdf_document2: default
 header-includes: |

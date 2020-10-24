@@ -18,7 +18,7 @@ abstract: |
  dignissim. Mauris quis arcu accumsan, tincidunt nunc id, scelerisque sapien.
 
 date: "`r Sys.Date()`"
-# bibliography: Dissertation.bib
+bibliography: references.bib
 toc: false
 link-citations: yes
 linkcolor: blue
@@ -36,24 +36,40 @@ header-includes: |
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+compas <- fairmodels::compas
+library(fairmodels)
+library(tidyverse)
 ```
 
-## Introduction
+# Introduction
 
 As more data and consequently more data-driven decisions have entered the world,
 the problem with algorithms reinforcing discriminatory structures have received
 an increasing amount of attention. Several cases showcase how algorithms that
 were designed to be neutral decision-makers have made discriminatory
 predictions. Examples include facial recognition being less accurate for people
-with darker skin [@buolamwini_gender_2018], ads for higher paid jobs being shown more frequently to
-men [@datta_automated_2015], healthcare predictions underestimating the illness of black people [@obermeyer_dissecting_2019]
-as well as individual tech company scandals such as [the Apple card seemingly
-granting men a higher credit limit than women](https://www.washingtonpost.com/business/2019/11/11/apple-card-algorithm-sparks-gender-bias-allegations-against-goldman-sachs/) and [Amazon’s automated
-recruitment tool unrighteously favoring men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G). However unintentional, these
-examples show the need for an awareness of discrimination and fairness when
-collecting data, training models and using predictions for decision-making.   
+with darker skin [@buolamwini_gender_2018], ads for higher paid jobs being shown
+more frequently to men [@datta_automated_2015], healthcare predictions
+underestimating the illness of black people [@obermeyer_dissecting_2019] as well
+as individual tech company scandals such as [the Apple card seemingly granting
+men a higher credit limit than
+women](https://www.washingtonpost.com/business/2019/11/11/apple-card-algorithm-sparks-gender-bias-allegations-against-goldman-sachs/)
+and [Amazon’s automated recruitment tool unrighteously favoring
+men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G).
+However unintentional, these examples show the need for an awareness of
+discrimination and fairness when collecting data, training models and using
+predictions for decision-making.
 
-In this project we have looked at methods for deadling with potential discrimination in models. First, we present x ways of measuring fairness in order to be able to evaluate it. In this part we also discuss different methods of dealing with bias. Secondly, we train several statistical models on a dataset were we know that discriminatory bias is present. We then use the R package *fairmodels* to evaluate how the model performed both in terms of accuracy and fairness. Lastly, we use a pre-processing bias mitigation method called impact disparate remover to reduce the presence of bias in the models. We evaluate the success of this tool and discuss it in relation to the different models.   
+In this project we have looked at methods for dealing with potential
+discrimination in models. First, we present x ways of measuring fairness in
+order to be able to evaluate it. In this part we also discuss different methods
+of dealing with bias. Secondly, we train several statistical models on a dataset
+were we know that discriminatory bias is present. We then use the R package
+*fairmodels* to evaluate how the model performed both in terms of accuracy and
+fairness. Lastly, we use a pre-processing bias mitigation method called impact
+disparate remover to reduce the presence of bias in the models. We evaluate the
+success of this tool and discuss it in relation to the different models.
 
 For simplicity, this project focuses solely on classification methods. (maybe present more restrictions)   
 
@@ -61,19 +77,32 @@ For simplicity, this project focuses solely on classification methods. (maybe pr
 
 ## Understanding Fairness in Statistical Models
 
-In order to build models that are less discriminatory than previously mentioned examples have proven to be, we first need a way to measure fairness. In recent years, a lot of work have been put into defining fairness in a quantitive way for machine learning purposes. These different definitions, listed and explained below, implicate somewhat different views on what fairness really is. This ongoing discussion draws on previous social and legal research on equality and fairness.
+In order to build models that are less discriminatory than previously mentioned
+examples have proven to be, we first need a way to measure fairness. In recent
+years, a lot of work have been put into defining fairness in a quantitative way
+for machine learning purposes. These different definitions, listed and explained
+below, implicate somewhat different views on what fairness really is. This
+ongoing discussion draws on previous social and legal research on equality and
+fairness. There are several measures available for such evaluation, but for 
+simplicity we will focus on two of the most common.
 
-### Quantifying Fairness
+### Demographic parity
 
-## Demographic parity
-
-This criterion states that the target variable should be independent of "protected" carachteristics (such as race and gender). This means that if $Y$ is our decision and $X$ the protected variable in question:
+This criterion states that the target variable should be independent of
+"protected" characteristics (such as race and gender). This means that if $Y$ is
+our decision and $X$ the protected variable in question:
 $$
 P(Y=1 | X=1) = P(Y=1 | X=0)
 $$
-This rule will enhance rules which classify the same fraction in each group as positive. This might appear unappealing, as it has a way of "forcing" equality. However, as @goel_non-discriminatory_2018 point out, many classifiers impact decisions which create future labels in future training data, and as such a lack of demographic parity risks causing ever-looping cycles of discrimination. Another negative with this measure, however, is that it makes sure we cannot use $X$ as a predictor which we in some circumstances want. 
+This rule will enhance rules which classify the same fraction in each group as
+positive. This might appear unappealing, as it has a way of "forcing" equality.
+However, as @goel_non-discriminatory_2018 point out, many classifiers impact
+decisions which create future labels in future training data, and as such a lack
+of demographic parity risks causing ever-looping cycles of discrimination.
+Another negative with this measure, however, is that it makes sure we cannot use
+$X$ as a predictor which we in some circumstances want.
 
-## Equalised odds
+### Equalised odds
 
 This criterion proposes that the predictor we use and the
 protected variable should be independent conditional on the true outcome, i.e.
@@ -83,49 +112,224 @@ P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
 $$
 This measure ensures that the true positive rates of the classifier are the same for both groups of $X$.
 
-## Well-calibrated systems
+## Optimising for Fairness
 
-Similar to equalised odds, but this criterion propose that the *target*
-and the protected variable are independent, conditional on the *predictor*.
-$$
-P(Y=1|X=0, G=1) = P(Y=1|X=1, G=1)
-$$
+As we already know, statistical learning may have other goals than just
+maximizing accuracy. For example, different costs for different types of
+misclassification may lead us to choose a different model than the one that has
+the highest overall accuracy rate [@james_islr_2013]. Tuning for a higher rate
+of fairness introduces yet another way to both pre-process data, train models
+and make predictions. Since discriminatory bias can be introduced in several
+different ways and at different stages of model training, there are several
+methods to optimize for fairness.
 
-Applying any of the above criteria will requires careful consideration when
-choosing variables to be included in a given model. Different measures and subsequent tuning of models might impact accuracy, which is something that we are going to try to evaluate. It's important to note, however, that the accuracy is likely to be biased as well, due to historical bias.
+### Pre-Processing
 
-### Optimising for Fairness
+Since discrimination may have been present in both data collection and the
+systems (institutions, products, etc) that generated data, we might want to deal
+with the issue already in the pre-processing stage. Attempts to do this includes
+resampling and synthesizing data. For example, one approach with several
+suggested algorithms proposes mapping the datapoints to a new feature space were
+as much relevant information as possible is kept while information about the
+protected variable is lost [@creager_learningrep_2019; @feng_learning_2019; @zemel_lfr_2013].
+Resampling, a technique commonly used to deal with
+undersampled groups or otherwise skewed data, have also proven to be an
+alternative for moderating discrimination in statistical learning.
+@kamiran_data_2012 suggests reweighing and resampling
+observations so as to enhance the presence of an initially undersampled groups
+(for example high income women). Here we will deal with three preprocessing 
+techniques:
 
-As we already know, statistical learning may have other goals than just maximizing accuracy. For example, different costs for different types of misclassificaiton may lead us to choose a different model than the one that has the highest overall accuracy rate [@james_islr_2013]. Tuning for a higher rate of fairness introduces yet another way to both pre-process data, train models and make predictions. Since discimrinatory bias can be introduced in several different ways and different stages of a model training, there are several methods to optimize for fairness.
+* Disparate impact removal 
+    - Introduced in @feldman_certifying_2015. This is a geometric method reshaping 
+      distributions on numerical variables conditioned on the protected. 
 
-#### Pre-Processing
+* Two resampling methods introduced in @kamiran_data_2012. In a scenario
+  with a binary protected variable and a binary classification problem
+  the four sample sizes relating to the joint distribution of classes
+  and protected features that would make the dataset discrimination-free
+  are calculated. Stratified sampling from these two groups are then performed.
+  Observations are then resampled with one out of two techniques. 
+    - Uniform resampling, where each observation has equal porbability to 
+      be duplicated or skipped to increase or decrease the size of a group.
+    - Preferential resampling, where observations close to the decision boundary
+      (of a classifier) gets higher priority for being duplicated or skipped.
 
-Since discrimination may have been present in both data collection and the systems (institutions, products, etc) that generated data, we might wna to deal with the issue already in the pre-processing stage. Attempts to do this includes resampling and synthesizing data. For example, one approach with several suggested algorithms proposes mapping the datapoints to a new feature space were as much relevant information as possible is kept while information about the protected variable is lost [@zemel_lfr_2013, @feng_adversial_2019, @creager_learningrep_2019]. Resampling, a technique commonly used to deal with undersampled groups or otherwise skewed data, have also proven to be an alternative for moderating discrimination in statistical learning. @kamiran_calders_preprocessing_2011 suggests reweighting and resampling observations so as to enhance the presence of an initially undersampled groups (for example high income women). 
+### Training
 
-#### Training
+Naturally, many methods for mitigating discrimination by algorithms focus on the
+training phase of statistical learning. From avoiding overfitting, we know how
+to constrain the learning by penalizing learned parameters and thus restraining
+them from having an unproportionally large impact in a classifier. Among
+classical apporaches ridge and lasso regression can be mentioned
+[@hastie_elements_2009]. Bias have been shown to sometimes remain in models
+despite the removal of the protected attribute, due to their correlation to
+other non-sensitive attributes (källa). In this sense, penalizing variables that
+are highly correlated to protected features looks like a promising solution.
 
-Naturally, many methods for mitigating discrimination by algorithms focus on the training phase of statistical learning. From avoiding overfitting, we know how to constrain the learning by penalizing learned parameters and thus restraining them from having an unproportionally large impact in a classifier. Amongst classical such apporach ridge and lasso regression can be mentioned [@hastie_elements_2009]. Bias have been shown to sometimes remain in models despite the removal of the protected attribute, due to their correlation to other non-sensitive attributes (källa). In this sense, penalizing variables that are highly correlated to protected features looks like a promising solution. 
+A similar approach, also focusing on the learning phase, is the *weighted sum of
+logs technique* propsed by [@goel_non-discriminatory_2018]. This algorithm
+models both the historical bias in the data and emprical bias imposed by the
+original algorithm in order to establish a "poportionally fair" classifier by
+restricting the optimization space of a logistic regression model.
 
-A similar approach, also focusing on the learning phase, is the *weighted sum of logs technique* propsed by [@goel_non-discriminatory_2018]. This algorithm models both the historical bias in the data and emprical bias imposed by the original algorithm in order to establish a "poportionally fair" classifier by restricting the optimization space of a logistic regression model. 
+posing constraint in the learning phase, dealing with correlations, penalty
 
-posing constraint in the learning phse, dealing with correlations, penalty
+It has even been suggested that one solution could be to build a multiple of
+models - i.e. one for each social group. Such an approach have proved to be
+succesful in some cases [@calders_verwer_2010], but has a clear disatvantage
+when it comes to dealing with multiple (intertwined) protected variables.
 
-It has even been suggested that one solution could be to build a multiple of models - i.e. one for each social group. Such an approach have proved to be succesful in some cases [@calders_verwer_2010], but has a clear disatvantage when it comes to dealing with multiple (intertwined) protected variables. 
+We will not deal with any such methods though, so perhaps remove this section?
 
 #### Prediction
 
-Finally, another way to remove discriminatory outcomes is by post-processing the predictions. For example, we normally calculate the best possible cut-off value with regards to accuracy in classificaiotn models (@hastie_elements_2009). Instead of only optimising for accuracy, we could include a measure on fairness and have it play a role in the decision of the threshold value. Another similar techinique is to modify the cut-off value differently for each group, as proposed by @hardt_equality_2018, although they do point out that a better option is to first "invest in better features and more data". A benefit to this approach is that it is much less complex and hence has a more straight-forward implementation than many of the previously mentioned techinques.
+Finally, another way to remove discriminatory outcomes is by post-processing the
+predictions. For example, we normally calculate the best possible cut-off value
+with regards to accuracy in classificaiotn models (@hastie_elements_2009).
+Instead of only optimising for accuracy, we could include a measure of fairness
+and have it play a role in the decision of the threshold value. Another similar
+technique is to modify the cut-off value differently for each group, as proposed
+by @hardt_equality_2018, although they do point out that a better option is to
+first "invest in better features and more data". A benefit to this approach is
+that it is much less complex and hence has a more straight-forward
+implementation than many of the previously mentioned techinques. We will look at
+how changing cut-off values with regards to minimisng demographic parity and
+equalised odds affect model accuracy.
+
+# Analysis
 
 ## Classification on the COMPAS Data
 
-The case we have selected to use for building statistical learning models, evaluating their discrimintion bias and furthermore mitigating these effects, is the compas[^Correctional Offender Management Profiling for Alternative Sanctions] data made available by Florida Department of Corrections and ProPublica in 2016. The dataset is a collection of $n = 5278$ observations including the decisions made by the COMPAS support tool used by U.S. courts to estimate the likelihood of recidivism of offenders. As such, it is being used to decide on the penalty of criminals. The compas data is an excellent case for studying discriminatory algorithms, as it both exhibits bias and is being used for actual classification for a highly sensitive cause. Because of this, many researcher who explore fairness in machine learning have chosen to study it as an example.  
+The case we have selected to use for building statistical learning models,
+evaluating their discrimintion bias and furthermore mitigating these effects, is
+the compas^[Correctional Offender Management Profiling for Alternative
+Sanctions] data made available by Florida Department of Corrections and
+ProPublica in 2016. The dataset, slightly modified from the original, is a
+collection of $n = 6172$ observations with the variables: ` `r names(compas)` `.
+Where `Two_yr_Recidivism` is the variable we want to predict and indicates
+whether an inmate have made another offense within two years of release. As
+such, the dataset is being used to decide on the penalty of criminals. The compas data is
+an excellent case for studying discriminatory algorithms, as it both exhibits
+bias and is being used for actual classification for a highly sensitive cause.
+Because of this, many researchers who explore fairness in machine learning have
+chosen to study it as an example. For the present purpose we filtered the data
+on `Ethnicity`, for `Caucasian` and `African_American` to create a binary protected
+variable.
 
-### Models
 
-We trained five different models on the compas data. [Kanske typ en table?]
+## Models
 
-## Evaluation of Bias in Models
+We trained five different models on the COMPAS data tuned for various
+parameters. Each of these models was then fit again but on data having
+undergone one of the three preprocessing mitigation methods. We fit the 
+models using all predictors in the dataset including the protected variable.
+The K-nearest neighbour model turned out to perform worse than chance when
+fit on mitigated datasets and was therefore left out of the analysis.
 
-## Disparate Impact Remover
+Model  | Tuning | Abbreviation
+------ | ------|-------------------------------------------
+Random Forest | Number of predictors sampled at each split | RF
+Artificial neural net  | Number of hidden nodes | ANN
+Logistic ridge regression | Penalisation | LR
+K-nearest neighbour (left out) | Number of neighbours | KNN
+AdaBoost | None | None 
 
-## Final Discussion
+
+### Model evaluation
+
+When evaluating bias in machine learning models one often utilise the ratio of
+the terms on either side of the equality in e.g. demographic parity or equalised
+odds described previously. I.e. if
+$$
+\frac{ P(Y=1 | X=0)}{P(Y=1 | X=1)} =1 \ \ \text{and/or} \ \  \frac{P(G=1|X=0, Y=1)}{P(G=1|X=1, Y=1)} =1
+$$
+we can say that our model is completely fair. In 1979 the US Equal Employment
+Opportunity Commission deemed that if this ratio falls below 0.8 disparate
+impact is present, known as the 80% rule [@feldman_certifying_2015]. Hence, we
+want a model that satisfies the above criteria as closely as possible but still
+yield a high accuracy. Let us for simplicity solely consider demographic parity
+(this also often referred to as statistical parity) as a measure for now. We can
+then compare the acquired accuracy of each model together with parity loss
+evaluated by this measure (note the acquired accuracy is measured on training
+data) as seen in figure \@ref(fig:fap1).
+
+(ref:fap1-text) Accuracy and fairness comparison for training data on the fitted models. Note that the y-axis is inverted. This is not the ratio explained previously but the "parity loss" which should be interpreted as the difference between the parity ratio and 1 [IS THIS TRUE??]. Hence, a measure that we want to minimise. 
+
+```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide'}
+
+load("models/fobject1.Rdata")
+fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x + 
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+```
+
+Figure \@ref(fig:fap1) tells us that using demographic parity as a fairness measure
+none of our models satisfy the 80% rule and thus disparate impact is present. Using
+the preprocessing techniques previously described we now fit the models on these
+processed datasets and compare which model and processing technique yields best
+results both in terms of fairness and accuracy (upper right corner of \@ref(fig:fap1)).
+The results can be seen in \@ref(fig:fap-all).
+
+(ref:fap-all-text) Accuracy and fairness comparison for preprocessed training data on the fitted models. The three methods can be seen in the suffixes to the models: "rem" = disparate impact removal, "resa pref" = preferential resampling and "resa unif" = uniform resampling. Note that the y-axis is inverted.
+
+```{r fap-all, echo=FALSE, fig.cap="(ref:fap-all-text)", out.width='100%', fig.height=6, results='hide'}
+
+load("models/fobject_all.Rdata")
+fap <- performance_and_fairness(fobject_all, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x + 
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+```
+
+The resampling methods seems to have best effect on minimising parity loss
+and the disparate impact removal technique even increase parity loss for
+some models. This might be due to the fact that this method can only mitigate
+numerical variables and there is only the `Number_of_Priors` variable in this dataset
+that we can mitigate. However, all of the resampled models have a parity loss of less
+than 0.2 (i.e. they satisfy the 80% rule) but the Random Forest models seems
+to maintain accuracy best. Investigating the RF-models fitted on preferentially 
+sampled data further, we can evaluate whether another cutoff than 
+the conventional 0.5-value would yield even better results in terms of fairness.
+
+```{r cutoff-rf, echo=FALSE, fig.cap="CUTOFF PLOT", out.width='100%',  results='hide', message=FALSE}
+
+load("models/fobject_rfs.Rdata")
+
+plot(ceteris_paribus_cutoff(fobject_rfs,
+                            subgroup = "African_American",
+                            fairness_metrics = c("TPR","STP"))) +
+  ggtitle("") +
+  labs(x = "Cutoff value", y = "Parity loss", color = "Parity loss metric") +
+  scale_color_discrete(labels = c("Demographic parity", "Equalised odds")) 
+  
+```
+It can be seen in figure \@ref(fig:cutoff-rf) that parity loss as measured by
+demographic parity would be minised with a cutoff at 0.42 instead of 0.5.
+Equalised odds on the other hand is minised at 0.5. So depending on which measure
+we want to use, we have to decide on a cutoff. If we add the preferentially resampled
+Random Forest model with a cutoff at 0.42 to the other RF models we can evaluate whether
+this drop in parity loss is worth any potential drop in accuracy. In figure \@ref(fig:fap-rf-comp)
+it is clear that adjusting the cutoff removed all bias with regards to demographic
+parity, but the big drop in accuracy is probably not worth it since the preferentially
+resampled RF model with a cutoff at 0.5 is minimising equalised odds as well as keeping 
+a fairly high accuracy.
+
+```{r fap-rf-comp, echo=FALSE, fig.cap="RF comparison", out.width='100%',  results='hide'}
+
+load("models/rf_comp.Rdata")
+
+fap <- performance_and_fairness(rf_comp, fairness_metric = "STP")
+plot(fap) +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
+  
+```
+
+
+# Discussion

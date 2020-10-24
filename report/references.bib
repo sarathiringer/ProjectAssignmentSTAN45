@@ -235,12 +235,18 @@ doi = {10.1007/s10618-010-0190-x}
 title = {Learning Fair Representations}, 
 author = {Rich Zemel and Yu Wu and Kevin Swersky and Toni Pitassi and Cynthia Dwork}, pages = {325--333}, year = {2013}, editor = {Sanjoy Dasgupta and David McAllester}, volume = {28}, number = {3}, series = {Proceedings of Machine Learning Research}, address = {Atlanta, Georgia, USA}, month = {17--19 Jun}, publisher = {PMLR}, pdf = {http://proceedings.mlr.press/v28/zemel13.pdf}, url = {http://proceedings.mlr.press/v28/zemel13.html}, abstract = {We propose a learning algorithm for fair classification that achieves both group fairness (the proportion of members in a protected group receiving positive classification is identical to the proportion in the population as a whole), and individual fairness (similar individuals should be treated similarly). We formulate fairness as an optimization problem of finding a good representation of the data with two competing goals: to encode the data as well as possible, while simultaneously obfuscating any information about membership in the protected group. We show positive results of our algorithm relative to other known techniques, on three datasets. Moreover, we demonstrate several advantages to our approach. First, our intermediate representation can be used for other classification tasks (i.e., transfer learning is possible); secondly, we take a step toward learning a distance metric which can find important dimensions of the data for classification.} }
 
-@unknown{feng_adversial_2019,
-author = {Feng, Rui and Yang, Yang and Lyu, Yuehan and Tan, Chenhao and Sun, Yizhou and Wang, Chunping},
-year = {2019},
-month = {04},
-pages = {},
-title = {Learning Fair Representations via an Adversarial Framework}
+@article{feng_learning_2019,
+	title = {Learning {Fair} {Representations} via an {Adversarial} {Framework}},
+	url = {http://arxiv.org/abs/1904.13341},
+	abstract = {Fairness has become a central issue for our research community as classification algorithms are adopted in societally critical domains such as recidivism prediction and loan approval. In this work, we consider the potential bias based on protected attributes (e.g., race and gender), and tackle this problem by learning latent representations of individuals that are statistically indistinguishable between protected groups while sufficiently preserving other information for classification. To do that, we develop a minimax adversarial framework with a generator to capture the data distribution and generate latent representations, and a critic to ensure that the distributions across different protected groups are similar. Our framework provides a theoretical guarantee with respect to statistical parity and individual fairness. Empirical results on four real-world datasets also show that the learned representation can effectively be used for classification tasks such as credit risk prediction while obstructing information related to protected groups, especially when removing protected attributes is not sufficient for fair classification.},
+	urldate = {2020-10-23},
+	journal = {arXiv:1904.13341 [cs, stat]},
+	author = {Feng, Rui and Yang, Yang and Lyu, Yuehan and Tan, Chenhao and Sun, Yizhou and Wang, Chunping},
+	month = apr,
+	year = {2019},
+	note = {arXiv: 1904.13341},
+	keywords = {Computer Science - Machine Learning, Statistics - Machine Learning},
+	file = {arXiv Fulltext PDF:C\:\\Users\\jritt\\Zotero\\storage\\685X9Z4J\\Feng et al. - 2019 - Learning Fair Representations via an Adversarial F.pdf:application/pdf;arXiv.org Snapshot:C\:\\Users\\jritt\\Zotero\\storage\\RHQJMF9C\\1904.html:text/html}
 }
 
 @article{creager_learningrep_2019,
@@ -278,3 +284,54 @@ doi = {10.1007/s10115-011-0463-8}
   biburl    = {https://dblp.org/rec/journals/corr/HardtPS16.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
+
+
+@inproceedings{feldman_certifying_2015,
+	address = {Sydney, NSW, Australia},
+	title = {Certifying and {Removing} {Disparate} {Impact}},
+	isbn = {978-1-4503-3664-2},
+	url = {http://dl.acm.org/citation.cfm?doid=2783258.2783311},
+	doi = {10.1145/2783258.2783311},
+	abstract = {What does it mean for an algorithm to be biased? In U.S. law, unintentional bias is encoded via disparate impact, which occurs when a selection process has widely different outcomes for different groups, even as it appears to be neutral. This legal determination hinges on a deﬁnition of a protected class (ethnicity, gender) and an explicit description of the process. When computers are involved, determining disparate impact (and hence bias) is harder. It might not be possible to disclose the process. In addition, even if the process is open, it might be hard to elucidate in a legal setting how the algorithm makes its decisions. Instead of requiring access to the process, we propose making inferences based on the data it uses. We present four contributions. First, we link disparate impact to a measure of classiﬁcation accuracy that while known, has received relatively little attention. Second, we propose a test for disparate impact based on how well the protected class can be predicted from the other attributes. Third, we describe methods by which data might be made unbiased. Finally, we present empirical evidence supporting the effectiveness of our test for disparate impact and our approach for both masking bias and preserving relevant information in the data. Interestingly, our approach resembles some actual selection practices that have recently received legal scrutiny.},
+	language = {en},
+	urldate = {2020-10-23},
+	booktitle = {Proceedings of the 21th {ACM} {SIGKDD} {International} {Conference} on {Knowledge} {Discovery} and {Data} {Mining} - {KDD} '15},
+	publisher = {ACM Press},
+	author = {Feldman, Michael and Friedler, Sorelle A. and Moeller, John and Scheidegger, Carlos and Venkatasubramanian, Suresh},
+	year = {2015},
+	pages = {259--268},
+	file = {Feldman et al. - 2015 - Certifying and Removing Disparate Impact.pdf:C\:\\Users\\jritt\\Zotero\\storage\\IJXHL38Z\\Feldman et al. - 2015 - Certifying and Removing Disparate Impact.pdf:application/pdf}
+}
+
+@article{kamiran_data_2012,
+	title = {Data preprocessing techniques for classification without discrimination},
+	volume = {33},
+	issn = {0219-1377, 0219-3116},
+	url = {http://link.springer.com/10.1007/s10115-011-0463-8},
+	doi = {10.1007/s10115-011-0463-8},
+	abstract = {Recently, the following Discrimination-Aware Classiﬁcation Problem was introduced: Suppose we are given training data that exhibit unlawful discrimination; e.g., toward sensitive attributes such as gender or ethnicity. The task is to learn a classiﬁer that optimizes accuracy, but does not have this discrimination in its predictions on test data. This problem is relevant in many settings, such as when the data are generated by a biased decision process or when the sensitive attribute serves as a proxy for unobserved features. In this paper, we concentrate on the case with only one binary sensitive attribute and a two-class classiﬁcation problem. We ﬁrst study the theoretically optimal trade-off between accuracy and non-discrimination for pure classiﬁers. Then, we look at algorithmic solutions that preprocess the data to remove discrimination before a classiﬁer is learned. We survey and extend our existing data preprocessing techniques, being suppression of the sensitive attribute, massaging the dataset by changing class labels, and reweighing or resampling the data to remove discrimination without relabeling instances. These preprocessing techniques have been implemented in a modiﬁed version of Weka and we present the results of experiments on real-life data.},
+	language = {en},
+	number = {1},
+	urldate = {2020-10-23},
+	journal = {Knowledge and Information Systems},
+	author = {Kamiran, Faisal and Calders, Toon},
+	month = oct,
+	year = {2012},
+	pages = {1--33},
+	file = {Kamiran and Calders - 2012 - Data preprocessing techniques for classification w.pdf:C\:\\Users\\jritt\\Zotero\\storage\\5WVKU6ET\\Kamiran and Calders - 2012 - Data preprocessing techniques for classification w.pdf:application/pdf}
+}
+
+@article{feng_learning_2019,
+	title = {Learning {Fair} {Representations} via an {Adversarial} {Framework}},
+	url = {http://arxiv.org/abs/1904.13341},
+	abstract = {Fairness has become a central issue for our research community as classification algorithms are adopted in societally critical domains such as recidivism prediction and loan approval. In this work, we consider the potential bias based on protected attributes (e.g., race and gender), and tackle this problem by learning latent representations of individuals that are statistically indistinguishable between protected groups while sufficiently preserving other information for classification. To do that, we develop a minimax adversarial framework with a generator to capture the data distribution and generate latent representations, and a critic to ensure that the distributions across different protected groups are similar. Our framework provides a theoretical guarantee with respect to statistical parity and individual fairness. Empirical results on four real-world datasets also show that the learned representation can effectively be used for classification tasks such as credit risk prediction while obstructing information related to protected groups, especially when removing protected attributes is not sufficient for fair classification.},
+	urldate = {2020-10-23},
+	journal = {arXiv:1904.13341 [cs, stat]},
+	author = {Feng, Rui and Yang, Yang and Lyu, Yuehan and Tan, Chenhao and Sun, Yizhou and Wang, Chunping},
+	month = apr,
+	year = {2019},
+	note = {arXiv: 1904.13341},
+	keywords = {Computer Science - Machine Learning, Statistics - Machine Learning},
+	file = {arXiv Fulltext PDF:C\:\\Users\\jritt\\Zotero\\storage\\685X9Z4J\\Feng et al. - 2019 - Learning Fair Representations via an Adversarial F.pdf:application/pdf;arXiv.org Snapshot:C\:\\Users\\jritt\\Zotero\\storage\\RHQJMF9C\\1904.html:text/html}
+}
+
