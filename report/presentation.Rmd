@@ -10,9 +10,12 @@ output: beamer_presentation
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-#library(summarytools)
+library(summarytools)
 library(tidyverse)
-
+library(fairmodels)
+library(knitr)
+library(kableExtra)
+library(DALEXtra)
 
 compas <- fairmodels::compas
 COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian") %>% 
@@ -24,7 +27,7 @@ COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
 
 # split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
 # compas_train <- training(split)
-# y_numeric <- as.numeric(compas_train$Two_yr_Recidivism)-1
+ y_numeric <- as.numeric(COMPAS$Two_yr_Recidivism)-1
 
 ```
 
@@ -79,11 +82,13 @@ $$
 
 ## 
 
+\small
 ```{r desc, results='asis', echo=FALSE}
 
-#dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
+dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
 
 ```
+\normalsize
 
 ## Models
 
@@ -97,40 +102,121 @@ AdaBoost | Predictors at each split
 
 ## Accuracy and Fairness for the Initial Models
 
-```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide'}
+```{r fap1, echo=FALSE, out.width='100%', results='hide'}
 
-# load("ProjectAssignmentSTAN45/report/models/fobject1.Rdata")
-# fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
-#                                 performance_metric = "accuracy")
-# x <- plot(fap)
-# x + 
-#   ggtitle("") +
-#   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+load("models/fobject1.Rdata")
+fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
 ```
 
 ## Disparate Impact Removal
 
-## Preferential Resampling
+## Resampling
+
+```{r joint-org, results='asis', echo=FALSE}
+
+kable(table(COMPAS$Two_yr_Recidivism, COMPAS$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position")) %>% 
+  add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
+
+```
 
 ## Uniform Resampling
 
+```{r joint-uni, results='asis', echo=FALSE}
+uniform_indexes <- resample(protected = COMPAS$Ethnicity,
+                            y = y_numeric)
+
+kable(table(COMPAS[uniform_indexes,]$Two_yr_Recidivism, COMPAS[uniform_indexes,]$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism, uniform resampling",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position")) %>% 
+  add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
+
+```
+
+## Preferential Resampling
+
+- Very similar to uniform 
+- Borderline observations skipped or duplicated more often
+- Evaluated by logistic regression
+
 ## Comparison
+
+```{r fap-all, echo=FALSE, out.width='100%', fig.height=6, results='hide'}
+
+load("models/fobject_all.Rdata")
+fap <- performance_and_fairness(fobject_all, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x + 
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  theme(legend.position = "",
+        axis.title=element_text(size=14))
+```
+
+## Cutoff adjustment 
+
+```{r cutoff-rf, echo=FALSE, out.width='100%',  results='hide', message=FALSE}
+
+load("models/fobject_co.Rdata")
+
+plot(ceteris_paribus_cutoff(fobject_co,
+                            subgroup = "African_American",
+                            fairness_metrics = c("TPR","STP"))) +
+  ggtitle("", subtitle = "") +
+  labs(x = "Cutoff value", y = "Parity loss", color = "Parity loss metric") +
+  scale_color_discrete(labels = c("Demographic parity", "Equalised odds")) 
+  
+```
+
+## Comparing cutoff models
+
+```{r fap-rf-comp, echo=FALSE, out.width='100%',  results='hide'}
+
+load("models/fo_comp.Rdata")
+
+fap <- performance_and_fairness(fo_comp, fairness_metric = "STP")
+plot(fap) +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
+  
+```
+
+## Evaluation on test data - comparison
+
+```{r fap-test, echo=FALSE, out.width='100%', fig.height=6,  results='hide'}
+
+load("models/fobject_test.Rdata")
+
+fap <- performance_and_fairness(fobject_test, fairness_metric = "STP")
+plot(fap) +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  theme(legend.position = "")
+  
+```
+
 
 ## Final Model Performance
 
+```{r modelperf, results='asis', echo = FALSE}
+load("models/rf_test_exp_resa_uni.Rdata")
+x <- model_performance(rf_test_exp_resa_uni)
+x <- data.frame(x[["measures"]]) %>% 
+  select(-f1) %>% round(digits = 3)
+kable(x, caption = "Performance",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position"))
+
+```
+
 
 ## Conclusions
-
-## Slide with R Output
-
-```{r cars, echo = TRUE}
-summary(cars)
-```
-
-## Slide with Plot
-
-```{r pressure}
-plot(pressure)
-```
 
 
