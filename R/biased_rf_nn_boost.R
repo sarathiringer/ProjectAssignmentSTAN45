@@ -11,8 +11,7 @@ rm(list = ls())
 set.seed(123)
 compas <- fairmodels::compas
 compas <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
-# compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
-
+compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
 compas$Ethnicity <- droplevels(compas$Ethnicity)
 
 split <- initial_split(compas, prop = 0.8, strata = "Two_yr_Recidivism")
@@ -1273,4 +1272,5 @@ save(fo_comp, file = "report/models/fo_comp.Rdata")
 
 ?last_fit
 
-
+table(compas_train[uniform_indexes, ]$Two_yr_Recidivism, compas_train[uniform_indexes, ]$Ethnicity)
+table(compas_train$Two_yr_Recidivism, compas_train$Ethnicity)

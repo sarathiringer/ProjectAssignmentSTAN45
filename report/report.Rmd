@@ -3,19 +3,6 @@ title: 'Investigating discrimination bias in predictive modelling'
 author:
   - Jonathan Rittmo
   - Sara Thiringer
-abstract: |
- Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur tempor quis
- tellus in convallis. Etiam mattis est laoreet mi facilisis fringilla. Curabitur
- sed tortor blandit, consectetur sem quis, posuere urna. Donec at sem turpis. Ut
- nec lacus vitae nisl pretium varius non a sem. Cras venenatis rhoncus
- facilisis. Curabitur viverra leo eu dui varius, ac hendrerit tellus maximus.
- Duis nec ipsum feugiat, egestas tortor et, elementum felis. Donec sagittis nec
- ante quis convallis. Aenean volutpat sem nec gravida ullamcorper. Ut vestibulum
- elementum sem. Morbi a malesuada ipsum. Nam placerat neque diam, vel lobortis
- diam dictum sed. Phasellus id urna ligula. Morbi mattis ex vel posuere mattis.
- Sed viverra felis et suscipit tempor. Ut at ante vitae est tempus sodales.
- Fusce condimentum in erat id dignissim. Nam hendrerit quis lorem quis
- dignissim. Mauris quis arcu accumsan, tincidunt nunc id, scelerisque sapien.
 
 date: "`r Sys.Date()`"
 bibliography: references.bib
@@ -224,15 +211,15 @@ classification for a highly sensitive cause. Because of this, many researchers
 who explore fairness in machine learning have chosen to study it as an example.
 For the present purpose we filtered the data on `Ethnicity`, for `Caucasian` and
 `African_American` to create a binary protected
-variable. Rendering $n$ to a total of $ 5278$ with no missing values. 
+variable. Rendering $n$ to a total of $5278$ with no missing values. A summary
+of the dataset can be seen below.
 ```{r desc, results='asis', echo=FALSE}
 
 dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE)
 
-# skim(compas) %>% select(-n_missing, -complete_rate) %>% kable(align = "r", digits = 2, booktabs = T, format = "latex") %>% 
-#   kable_styling(latex_options = c("hold_position")) 
-
 ```
+
+### Preprocessed data
 
 
 
@@ -355,12 +342,13 @@ plot(fap) +
 ## Final model evaluation
 
 Since we now have a chosen model we want to see how it performs on out of sample
-data. Due to the nature of our analysis it might also be interesting to see
-how well it performs in comparison to the other models fitted. Accuracy and
-parity loss as measured by demographic parity for all models using unseen 
-testing data can be seen in figure \@ref(fig:fap-test) and our chosen model
-appears to have a satisfactory performance on test data as well, meeting the 80%
-criterion as well as still maintaining a fairly high accuracy. 
+data. Due to the nature of our analysis it might also be interesting to see how
+well it performs in comparison to the other models fitted. Accuracy and parity
+loss as measured by demographic parity for all models using unseen testing data
+can be seen in figure \@ref(fig:fap-test) and our chosen model appears to have a
+satisfactory performance on test data as well, however, it just barely meets the
+80% criterion and it is no longer the model with best accuracy among the ones 
+with a demographic parity below $0.2$. 
 
 ```{r fap-test, echo=FALSE, fig.cap="Testing", out.width='100%', fig.height=6,  results='hide'}
 
@@ -373,9 +361,22 @@ plot(fap) +
   
 ```
 
-
-
 # Discussion
+
+We have in this report investigated methods to mitigate discriminatory bias in
+machine learning. Specifically we have analysed the COMPAS dataset to predict
+whether an offender will commit another crime within two years after release.
+This is obviously useful information when judging whether to release inmates or
+not. However, to do this we want models that are accurate but do not take
+certain sensitive variables into account when making predictions. Several
+measures are available to estimate fairness in models each with slightly
+different interpretation. We have only addressed two of these measures in this
+report and even further limited our analysis by mainly taking demographic parity
+into account when evaluating models. Our results show that it is possible to
+limit the effect of unfair models to a great extent without losing too much
+accuracy. However, caution is advised for using this data to inform decisions as
+sensitive as whether to release an inmate or not due to the accuracy (of any
+model) not even exceeding 70%.
 
 
 # References
