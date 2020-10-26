@@ -11,6 +11,7 @@ output: beamer_presentation
 knitr::opts_chunk$set(echo = FALSE)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #library(summarytools)
 
 ```
@@ -106,6 +107,9 @@ x +
 ## Final Model Performance
 
 =======
+=======
+
+>>>>>>> 67d7b79f4da11714777303f3cce5dc06aac7185b
 library(summarytools)
 library(tidyverse)
 
@@ -214,7 +218,10 @@ AdaBoost | Predictors at each split
 
 ## Final Model Performance
 
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 67d7b79f4da11714777303f3cce5dc06aac7185b
 ## Conclusions
 
 ## Slide with R Output
