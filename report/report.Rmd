@@ -168,7 +168,7 @@ are highly correlated to protected features looks like a promising solution.
 
 A similar approach, also focusing on the learning phase, is the *weighted sum of
 logs technique* propsed by [@goel_non-discriminatory_2018]. This algorithm
-models both the historical bias in the data and emprical bias imposed by the
+models both the historical bias in the data and empirical bias imposed by the
 original algorithm in order to establish a "poportionally fair" classifier by
 restricting the optimization space of a logistic regression model.
 
