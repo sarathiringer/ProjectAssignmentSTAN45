@@ -37,9 +37,17 @@ header-includes: |
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-compas <- fairmodels::compas
 library(fairmodels)
 library(tidyverse)
+library(skimr)
+library(knitr)
+library(kableExtra)
+library(summarytools)
+
+compas <- fairmodels::compas
+COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
+#compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
+COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
 ```
 
 # Introduction
@@ -205,17 +213,27 @@ The case we have selected to use for building statistical learning models,
 evaluating their discrimintion bias and furthermore mitigating these effects, is
 the compas^[Correctional Offender Management Profiling for Alternative
 Sanctions] data made available by Florida Department of Corrections and
-ProPublica in 2016. The dataset, slightly modified from the original, is a
-collection of $n = 6172$ observations with the variables: ` `r names(compas)` `.
-Where `Two_yr_Recidivism` is the variable we want to predict and indicates
-whether an inmate have made another offense within two years of release. As
-such, the dataset is being used to decide on the penalty of criminals. The compas data is
-an excellent case for studying discriminatory algorithms, as it both exhibits
-bias and is being used for actual classification for a highly sensitive cause.
-Because of this, many researchers who explore fairness in machine learning have
-chosen to study it as an example. For the present purpose we filtered the data
-on `Ethnicity`, for `Caucasian` and `African_American` to create a binary protected
-variable.
+ProPublica in 2016. The dataset sourced from the `fairmodels` package, slightly
+modified from the original COMPAS dataset, is a collection of $n = 6172$ observations with the
+variables: ` `r names(compas)` `. Where `Two_yr_Recidivism` is the variable we
+want to predict and indicates whether an inmate have made another offense within
+two years of release. As such, the dataset is being used to decide on the
+penalty of criminals. The compas data is an excellent case for studying
+discriminatory algorithms, as it both exhibits bias and is being used for actual
+classification for a highly sensitive cause. Because of this, many researchers
+who explore fairness in machine learning have chosen to study it as an example.
+For the present purpose we filtered the data on `Ethnicity`, for `Caucasian` and
+`African_American` to create a binary protected
+variable. Rendering $n$ to a total of $ 5278$ with no missing values. 
+```{r desc, results='asis', echo=FALSE}
+
+dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE)
+
+# skim(compas) %>% select(-n_missing, -complete_rate) %>% kable(align = "r", digits = 2, booktabs = T, format = "latex") %>% 
+#   kable_styling(latex_options = c("hold_position")) 
+
+```
+
 
 
 ## Models
@@ -225,7 +243,9 @@ parameters. Each of these models was then fit again but on data having
 undergone one of the three preprocessing mitigation methods. We fit the 
 models using all predictors in the dataset including the protected variable.
 The K-nearest neighbour model turned out to perform worse than chance when
-fit on mitigated datasets and was therefore left out of the analysis.
+fit on mitigated datasets and was therefore left out of the analysis. The
+dataset was split for training and testing with 20% of the observations
+reserved for testing.
 
 Model  | Tuning | Abbreviation
 ------ | ------|-------------------------------------------
@@ -291,40 +311,62 @@ The resampling methods seems to have best effect on minimising parity loss
 and the disparate impact removal technique even increase parity loss for
 some models. This might be due to the fact that this method can only mitigate
 numerical variables and there is only the `Number_of_Priors` variable in this dataset
-that we can mitigate. However, all of the resampled models have a parity loss of less
-than 0.2 (i.e. they satisfy the 80% rule) but the Random Forest models seems
-to maintain accuracy best. Investigating the RF-models fitted on preferentially 
-sampled data further, we can evaluate whether another cutoff than 
-the conventional 0.5-value would yield even better results in terms of fairness.
+that we can mitigate. However, most of the resampled models have a parity loss of less
+than 0.2 (i.e. they satisfy the 80% rule). Choosing the four most accurate of these
+we can investigate whether applying a different probability cutoff than the conventional
+0.5 would mitigate parity loss even further. In figure \@ref(fig:cutoff-rf) it can be
+seen how the parity measures are affected by varying the cutoffs and the values that
+would minimise demographic parity *and* equalised odds. 
 
 ```{r cutoff-rf, echo=FALSE, fig.cap="CUTOFF PLOT", out.width='100%',  results='hide', message=FALSE}
 
-load("models/fobject_rfs.Rdata")
+load("models/fobject_co.Rdata")
 
-plot(ceteris_paribus_cutoff(fobject_rfs,
+plot(ceteris_paribus_cutoff(fobject_co,
                             subgroup = "African_American",
                             fairness_metrics = c("TPR","STP"))) +
-  ggtitle("") +
+  ggtitle("", subtitle = "") +
   labs(x = "Cutoff value", y = "Parity loss", color = "Parity loss metric") +
   scale_color_discrete(labels = c("Demographic parity", "Equalised odds")) 
   
 ```
-It can be seen in figure \@ref(fig:cutoff-rf) that parity loss as measured by
-demographic parity would be minised with a cutoff at 0.42 instead of 0.5.
-Equalised odds on the other hand is minised at 0.5. So depending on which measure
-we want to use, we have to decide on a cutoff. If we add the preferentially resampled
-Random Forest model with a cutoff at 0.42 to the other RF models we can evaluate whether
-this drop in parity loss is worth any potential drop in accuracy. In figure \@ref(fig:fap-rf-comp)
-it is clear that adjusting the cutoff removed all bias with regards to demographic
-parity, but the big drop in accuracy is probably not worth it since the preferentially
-resampled RF model with a cutoff at 0.5 is minimising equalised odds as well as keeping 
-a fairly high accuracy.
+Applying the cutoff values from figure \@ref(fig:cutoff-rf) and comparing them
+to models using 0.5 we can evaluate whether this drop in parity loss would
+be worth any potential drop in accuracy. This comparison can be seen in
+figure \@ref(fig:cutoff-rf). Adjusting cutoffs can have quite large effect,
+however, since all models already satisfies the 80% rule we want to argue
+that the drop in accuracy is not worth it. Hence, if the goal of the analysis
+is to find a single model we would choose Random Forest trained on uniformly
+resampled data. As a coincidence it turns out that this model produces the 
+smallet parity loss as measured by equlised odds, further increasing our confidence.
+
 
 ```{r fap-rf-comp, echo=FALSE, fig.cap="RF comparison", out.width='100%',  results='hide'}
 
-load("models/rf_comp.Rdata")
+load("models/fo_comp.Rdata")
 
-fap <- performance_and_fairness(rf_comp, fairness_metric = "STP")
+fap <- performance_and_fairness(fo_comp, fairness_metric = "STP")
+plot(fap) +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
+  
+```
+
+## Final model evaluation
+
+Since we now have a chosen model we want to see how it performs on out of sample
+data. Due to the nature of our analysis it might also be interesting to see
+how well it performs in comparison to the other models fitted. Accuracy and
+parity loss as measured by demographic parity for all models using unseen 
+testing data can be seen in figure \@ref(fig:fap-test) and our chosen model
+appears to have a satisfactory performance on test data as well, meeting the 80%
+criterion as well as still maintaining a fairly high accuracy. 
+
+```{r fap-test, echo=FALSE, fig.cap="Testing", out.width='100%', fig.height=6,  results='hide'}
+
+load("models/fobject_test.Rdata")
+
+fap <- performance_and_fairness(fobject_test, fairness_metric = "STP")
 plot(fap) +
   ggtitle("") +
   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
@@ -332,4 +374,9 @@ plot(fap) +
 ```
 
 
+
 # Discussion
+
+
+# References
+
