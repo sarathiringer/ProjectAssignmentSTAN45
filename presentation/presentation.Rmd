@@ -1,5 +1,5 @@
 ---
-title: 'Investigating discrimination bias in predictive modelling'
+title: 'Investigating discrimination bias in \newline predictive modelling'
 author:
   - Sara Thiringer
   - Jonathan Rittmo
@@ -9,19 +9,113 @@ output: beamer_presentation
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+
+library(summarytools)
+library(tidyverse)
+
+
+compas <- fairmodels::compas
+COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
+#compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
+COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
+
+# split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
+# compas_train <- training(split)
+# y_numeric <- as.numeric(compas_train$Two_yr_Recidivism)-1
+
 ```
 
-## R Markdown
 
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+## Background: The Problem
 
-## Slide with Bullets
+In recent years, many scandalous examples have shown that statistical models trained on large amounts of data can "act" discriminatory. Examples include:
 
-- Bullet 1
-- Bullet 2
-- Bullet 3
+- Adds of high-income jobs being shown less frequently to women, presumable becasue they've been predicted to be less interested or suitable^[@datta_automated_2015] 
+
+- Black people's health status being underestimated, leading to inappropriate healtch care measures^[@obermeyer_dissecting_2019]
+
+- Black people begin predicted a higher risk for crime recidivism, leading to higher penalties^[ProPublica (2016)]
+
+## Project Aims
+
+* How can we quantify fairness in order to be able to evaluate algorithmic fairness?
+* What methods are available to increase algorithmic fairness? In what type of
+  situations do they apply? (i.e. In what kind of situations can we expect them to
+  be successful?)
+
+## Background: Why Discrimination Bias?
+
+- Correlation between outcome $y$ and protected charateristic $x_p$
+- Correlation between important predictors $\boldsymbol{x}_i$ and protected carachteristic $x_p$
+- Undersampling of groups with protected protected carachteristic $x_p$
+
+## Possible Solutions
+
+**Pre-Processing**  | **Training** | **Prediction**
+------ | ------|-------------------------------------------
+Resampling | Penalty | Threshold
+Mapping  | Model bias | adjustments
+Altering labels | Tuning for fairness | Alter predictions
+
+We've chosen to work with resampling and threshold adjustment. 
+
+## Possible Goals
+
+Demographic parity
+
+$$
+P(Y=1 | X=1) = P(Y=1 | X=0)
+$$
+
+Equalized odds
+
+$$
+P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
+$$
+
+## 
+
+```{r desc, results='asis', echo=FALSE}
+
+dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
+
+```
+
+## Models
+
+Model  | Tuning 
+------ | -------------------------------------------------
+Random Forest | Predictors at each split 
+Artificial neural net  | Number of hidden nodes 
+Logistic ridge regression | Penalisation 
+K-nearest neighbour (left out) | Number of neighbours
+AdaBoost | Predictors at each split
+
+## Accuracy and Fairness for the Initial Models
+
+```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide'}
+
+# load("ProjectAssignmentSTAN45/report/models/fobject1.Rdata")
+# fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
+#                                 performance_metric = "accuracy")
+# x <- plot(fap)
+# x + 
+#   ggtitle("") +
+#   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+```
+
+## Disparate Impact Removal
+
+## Preferential Resampling
+
+## Uniform Resampling
+
+## Comparison
+
+## Final Model Performance
+
+## Conclusions
 
 ## Slide with R Output
 
@@ -34,4 +128,5 @@ summary(cars)
 ```{r pressure}
 plot(pressure)
 ```
+
 

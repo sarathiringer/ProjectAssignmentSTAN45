@@ -309,7 +309,7 @@ Random Forest | Number of predictors sampled at each split | RF
 Artificial neural net  | Number of hidden nodes | ANN
 Logistic ridge regression | Penalisation | LR
 K-nearest neighbour (left out) | Number of neighbours | KNN
-AdaBoost | None | None 
+AdaBoost | Number of predictors sampled at each split | None 
 
 
 ### Model evaluation
