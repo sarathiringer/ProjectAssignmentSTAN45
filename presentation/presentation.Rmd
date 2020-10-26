@@ -10,7 +10,22 @@ output: beamer_presentation
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-#library(summarytools)
+
+library(summarytools)
+library(tidyverse)
+
+
+compas <- fairmodels::compas
+COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian") %>% 
+  rename(Below25 = Age_Below_TwentyFive) %>% 
+  rename(Above45 = Age_Above_FourtyFive)
+#compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
+COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
+
+
+# split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
+# compas_train <- training(split)
+# y_numeric <- as.numeric(compas_train$Two_yr_Recidivism)-1
 
 ```
 
@@ -63,35 +78,35 @@ $$
 P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
 $$
 
-## Data: COMPAS
+## 
 
 ```{r desc, results='asis', echo=FALSE}
 
-#dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE)
+dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
 
 ```
 
 ## Models
 
-Model  | Tuning | Abbreviation
------- | ------|-------------------------------------------
-Random Forest | Number of predictors sampled at each split | RF
-Artificial neural net  | Number of hidden nodes | ANN
-Logistic ridge regression | Penalisation | LR
-K-nearest neighbour (left out) | Number of neighbours | KNN
-AdaBoost | None | None 
+Model  | Tuning 
+------ | -------------------------------------------------
+Random Forest | Predictors at each split 
+Artificial neural net  | Number of hidden nodes 
+Logistic ridge regression | Penalisation 
+K-nearest neighbour (left out) | Number of neighbours
+AdaBoost | Predictors at each split
 
 ## Accuracy and Fairness for the Initial Models
 
 ```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide'}
 
-load("ProjectAssignmentSTAN45/report/models/fobject1.Rdata")
-fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
-                                performance_metric = "accuracy")
-x <- plot(fap)
-x + 
-  ggtitle("") +
-  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+# load("ProjectAssignmentSTAN45/report/models/fobject1.Rdata")
+# fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
+#                                 performance_metric = "accuracy")
+# x <- plot(fap)
+# x + 
+#   ggtitle("") +
+#   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
 ```
 
 ## Disparate Impact Removal
@@ -117,4 +132,5 @@ summary(cars)
 ```{r pressure}
 plot(pressure)
 ```
+
 
