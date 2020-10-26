@@ -5,6 +5,7 @@ author:
   - Jonathan Rittmo
 date: "26/10/2020"
 output: beamer_presentation
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -12,6 +13,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 #library(summarytools)
 library(tidyverse)
+library(fairmodels)
 
 
 compas <- fairmodels::compas
@@ -51,7 +53,7 @@ In recent years, many scandalous examples have shown that statistical models tra
 
 - Correlation between outcome $y$ and protected charateristic $x_p$
 - Correlation between important predictors $\boldsymbol{x}_i$ and protected carachteristic $x_p$
-- Undersampling of groups with protected protected carachteristic $x_p$
+- Undersampling of groups with protected carachteristic $x_p$
 
 ## Possible Solutions
 
@@ -99,13 +101,13 @@ AdaBoost | Predictors at each split
 
 ```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide'}
 
-# load("ProjectAssignmentSTAN45/report/models/fobject1.Rdata")
-# fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
-#                                 performance_metric = "accuracy")
-# x <- plot(fap)
-# x + 
-#   ggtitle("") +
-#   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+load("models/fobject1.Rdata")
+fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
 ```
 
 ## Disparate Impact Removal
