@@ -1264,13 +1264,9 @@ fo_comp <- fairness_check(fo_comp, rf_explainer_resa_pref,
 plot(performance_and_fairness(fo_comp, fairness_metric = "STP"))
 
 save(fo_comp, file = "report/models/fo_comp.Rdata")
-
+save(rf_test_exp_resa_uni, file = "report/models/rf_test_exp_resa_uni.Rdata")
 
 #####################
 #### TESTING ########
 #####################
 
-?last_fit
-
-table(compas_train[uniform_indexes, ]$Two_yr_Recidivism, compas_train[uniform_indexes, ]$Ethnicity)
-table(compas_train$Two_yr_Recidivism, compas_train$Ethnicity)
