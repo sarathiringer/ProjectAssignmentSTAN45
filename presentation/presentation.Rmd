@@ -15,9 +15,12 @@ library(tidyverse)
 
 
 compas <- fairmodels::compas
-COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
+COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian") %>% 
+  rename(Below25 = Age_Below_TwentyFive) %>% 
+  rename(Above45 = Age_Above_FourtyFive)
 #compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
 COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
+
 
 # split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
 # compas_train <- training(split)
