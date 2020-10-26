@@ -10,8 +10,7 @@ output: beamer_presentation
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-
-library(summarytools)
+#library(summarytools)
 library(tidyverse)
 
 
@@ -82,7 +81,7 @@ $$
 
 ```{r desc, results='asis', echo=FALSE}
 
-dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
+#dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
 
 ```
 
@@ -118,6 +117,7 @@ AdaBoost | Predictors at each split
 ## Comparison
 
 ## Final Model Performance
+
 
 ## Conclusions
 
