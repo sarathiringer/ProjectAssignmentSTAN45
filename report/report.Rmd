@@ -26,15 +26,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(fairmodels)
 library(tidyverse)
-library(skimr)
 library(knitr)
 library(kableExtra)
 library(summarytools)
+library(tidymodels)
 
 compas <- fairmodels::compas
 COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
 #compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
 COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
+
+split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
+compas_train <- training(split)
+y_numeric <- as.numeric(compas_train$Two_yr_Recidivism)-1
 ```
 
 # Introduction
@@ -221,7 +225,72 @@ dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE)
 
 ### Preprocessed data
 
+The two resampling methods aims to even out inequalities between the depraved
+and privileged groups having positive and negative outcome attributes
+respectively. That is, in our case, the methods try to make the joint
+distribution of `Ethnicity` and `Two_yr_Recidivism` uniform by duplicating some
+observations and removing others. In effect undersampling some groups and oversampling
+others. If we look at the original joint distribution of `Ethnicity` and `Two_yr_Recidivism`
+from the training data in table \@ref(tab:joint-org).
 
+```{r joint-org, results='asis', echo=FALSE}
+
+kable(table(compas_train$Two_yr_Recidivism, compas_train$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position")) %>% 
+  add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
+
+# kable(joined, align = "r", digits = 2, booktabs = T, 
+#       caption = "Joint distribution of Ethnicity and Two_yr_Recidivism", 
+#       format = "latex",
+#       col.names = c("Deficit",
+#                     "n",
+#                     "TD",
+#                     "TD",
+#                     "BTD"))%>%
+#   kable_styling(latex_options = c("hold_position")) %>% 
+#   collapse_rows(columns= 1, valign = "top", latex_hline = "major") %>% 
+#   add_header_above(c(" " = 2, "Analytic" = 1,  "Simulation" = 2)) 
+
+```
+
+In uniform resampling all observations have equal probability of being
+duplicated or removed. However, in preferential resampling we fit a logisitc
+regression model with `Two_yr_Recidivism` as outcome variable and all the other
+variables as predictors, then we use the resulting probabilities as sampling
+probabilities, where borderline cases (i.e. cases that is on the border of being
+classified as either 1 or 0 in `Two_yr_Recidivism`) are duplicated or removed
+more frequently than "certain" cases. In table \@ref(tab:joint-uni) the new
+joint distribution when using uniform resampling can be seen and in table
+\@ref(tab:joint-pref) preferential sampling has been used.
+
+```{r joint-uni, results='asis', echo=FALSE}
+uniform_indexes <- resample(protected = compas_train$Ethnicity,
+                            y = y_numeric)
+
+kable(table(compas_train[uniform_indexes,]$Two_yr_Recidivism, compas_train[uniform_indexes,]$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism, uniform resampling",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position")) %>% 
+  add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
+
+```
+
+```{r joint-pref, results='asis', echo=FALSE}
+probs <- glm(Two_yr_Recidivism ~., data = compas_train, family = binomial())$fitted.values
+pref_ind <- resample(protected = compas_train$Ethnicity,
+                     y = y_numeric,
+                     type = "preferential",
+                     probs = probs)
+
+kable(table(compas_train[pref_ind,]$Two_yr_Recidivism, compas_train[pref_ind,]$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism, preferential resampling",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position")) %>% 
+  add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
+
+```
+
+As can be seen, the distributions are similar even though different observations have
+been resampled. 
 
 ## Models
 
