@@ -105,7 +105,7 @@ Sex | Factor | Female / Male | 19.5 / 80.5
 
 ## Descriptives
 
-```{r descplots, results='asis', echo=FALSE}
+```{r descplots, results='asis', echo=FALSE, message=FALSE}
 
 df_des <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian") %>% 
   rename(Below25 = Age_Below_TwentyFive) %>% 
@@ -113,28 +113,29 @@ df_des <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasi
 
 g1 <- ggplot(compas, aes(x = Ethnicity, fill = Ethnicity)) +
   geom_bar() +
-  theme_bw() +
-  scale_fill_brewer(palette="Dark2") +
+  theme_minimal() +
+  scale_fill_brewer(palette="Set2") +
   labs(y = "Number of observations") +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank())
+
 
 g2 <- ggplot(df_des, aes(x = Ethnicity, fill = Ethnicity)) +
   geom_bar() +
-  theme_bw() +
-  scale_fill_brewer(palette="Dark2") +
+  theme_minimal() +
+  scale_fill_brewer(palette="Set2") +
   labs(y = "Number of observations")
 
 g3 <- ggplot(df_des, aes(x = Sex, fill = Sex)) +
   geom_bar() +
-  theme_bw() +
-  scale_fill_brewer(palette="Dark2") +
+  theme_minimal() +
+  scale_fill_brewer(palette="Set2") +
   labs(y = "Number of observations")
 
 g4 <- ggplot(df_des, aes(x = Two_yr_Recidivism, fill = Two_yr_Recidivism)) +
   geom_bar() +
-  theme_bw() +
-  scale_fill_brewer(palette="Dark2") +
+  theme_minimal() +
+  scale_fill_brewer(palette="Set2") +
   labs(y = "Number of observations")
 
 cowplot::plot_grid(g1, g2, g3, g4)
@@ -151,9 +152,22 @@ Logistic ridge regression | Penalisation
 K-nearest neighbour (left out) | Number of neighbours
 AdaBoost | Predictors at each split
 
+## Evaluation of the Initial Models
+```{r fobject1, echo=FALSE, out.width='100%', results='hide', message=FALSE, warning=FALSE}
+
+load("models/fobject1.Rdata")
+plot(fobject1)
+# x +
+#   ggtitle("") +
+#   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+#   theme(axis.title = element_text(size = 18),
+#         axis.text = element_text(size = 16),
+#         rect = element_rect(size = 12))
+```
+
 ## Accuracy and Fairness for the Initial Models
 
-```{r fap1, echo=FALSE, out.width='100%', results='hide', message = FALSE}
+```{r fap1, echo=FALSE, out.width='100%', results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject1.Rdata")
 fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
@@ -161,11 +175,16 @@ fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
 x <- plot(fap)
 x +
   ggtitle("") +
+
   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
   ylim(0.75, 0.1) +
   xlim(0.635, 0.7) +
       theme(#legend.position = "",
-        axis.title=element_text(size=14), aspect.ratio = 0.7)
+        aspect.ratio = 0.7,
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 16),
+        rect = element_rect(size = 12))
+
 ```
 
 ## Disparate Impact Removal
@@ -174,7 +193,7 @@ x +
 Removes differences between groups while preserving it within the groups. Example: Number of priors. 
 \normalsize
 
-```{r dir, results='asis', echo=FALSE, warning=FALSE}
+```{r dir, results='asis', echo=FALSE, message=FALSE, warning=FALSE}
 
 
 df_rem <- compas_train[,c("Number_of_Priors", "Ethnicity")]
@@ -232,9 +251,7 @@ kable(table(compas_train[uniform_indexes,]$Two_yr_Recidivism, compas_train[unifo
 
 ## Preferential Resampling
 
-- Very similar to uniform 
-- Borderline observations skipped or duplicated more often
-- Evaluated by logistic regression
+Unequal probability sampling where probabilities are determined by fitting a logistic regression model on the outcome variable. Borderline observations are skipped or duplicated more often. Result is the same as for uniform.
 
 ```{r joint-pref, results='asis', echo=FALSE}
 probs <- glm(Two_yr_Recidivism ~., data = compas_train, family = binomial())$fitted.values
@@ -286,7 +303,7 @@ x +
 
 ## Full Comparison
 
-```{r fap-all, echo=FALSE, out.width='100%', results='hide', message=FALSE}
+```{r fap-all, echo=FALSE, out.width='100%', results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject_all.Rdata")
 fap <- performance_and_fairness(fobject_all, fairness_metric = "STP",
@@ -303,7 +320,7 @@ x +
 
 ## Threshold Adjustment 
 
-```{r cutoff-rf, echo=FALSE, out.width='100%',  results='hide', message=FALSE}
+```{r cutoff-rf, echo=FALSE, out.width='100%',  results='hide', message=FALSE, message=FALSE, warning=FALSE}
 
 load("models/fobject_co.Rdata")
 
@@ -318,7 +335,7 @@ plot(ceteris_paribus_cutoff(fobject_co,
 
 ## Comparing Models with Different Thresholds
 
-```{r fap-rf-comp, echo=FALSE, out.width='100%',  results='hide'}
+```{r fap-rf-comp, echo=FALSE, out.width='100%',  results='hide', message=FALSE, warning=FALSE}
 
 load("models/fo_comp.Rdata")
 
@@ -331,7 +348,7 @@ plot(fap) +
 
 ## Evaluation on Test Data - Comparison
 
-```{r fap-test, echo=FALSE, out.width='100%', fig.height=6,  results='hide'}
+```{r fap-test, echo=FALSE, out.width='100%', fig.height=6,  results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject_test.Rdata")
 
@@ -344,7 +361,7 @@ plot(fap) +
 ```
 
 
-## Final Model Performance and Conclusion
+## Final Model Performance
 
 - The resampling methods seems to have best effect on minimising parity loss while also preserving accuracy rates
 - Random Forest looked most promising, but while tested on new data Logistic Regression, Artifical Neural Network and AdaBoost were equally strong competitors (all resampled)
@@ -361,12 +378,17 @@ kable(x, caption = "Performance",
 ```
 
 
-## General Conclusions
+## Final Conclusions
 
 - It is possible to build models who satisfy some fairness criteria without a too large drop in accuracy
+
 - Decisions for fair models include: fairness measure, evaluation metrics and choice of methods
+
 - Less complex methods can be found amongst resampling and threshold adjustment
+
 - As always, what type of data we are dealing with will largely impact the results of different methods (for example why disparate impact remover didn't work)
+
+- Bias investigation simulteaneously adds and decreases complexity
 
 ## References
 
