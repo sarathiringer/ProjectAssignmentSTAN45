@@ -132,3 +132,33 @@ x +
         axis.title=element_text(size=14))
 
 plot(x)
+
+
+## 
+
+load("models/fobject1.Rdata")
+
+fobject1.2 <- expand_fairness_object(fobject1)
+
+fobject_2 <- fobject1.2 %>% 
+  filter(metric == "TPR" | metric == "STP") %>% 
+  mutate(metric = case_when(metric == "TPR" ~ "Equalized odds",
+                            metric == "STP"  ~ "Demographic parity"))
+  
+ggplot(fobject_2, aes(x = model, y = score, fill = model)) +
+  geom_col() +
+  geom_hline(yintercept = 0.2, linetype = 'dashed') +
+  coord_flip() +
+  theme_minimal() +
+  labs(x = '', y = 'Fairness Metric', fill = 'Model') +
+  scale_fill_brewer(palette="Set2") +
+  facet_grid(metric ~ .) +
+  theme(text = element_text(size = 15))
+
+ggplot(fobject_2, aes(x = metric, y = score, fill = model)) +
+  geom_bar(stat="identity", position="dodge") +
+  geom_hline(yintercept = 0.2, linetype = 'dashed') +
+  coord_flip() +
+  theme_minimal() +
+  labs(x = '', y = 'Fairness Metric', fill = 'Model') +
+  scale_fill_brewer(palette="Set2")

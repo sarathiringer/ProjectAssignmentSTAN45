@@ -161,12 +161,7 @@ AdaBoost | Predictors at each split
 
 load("models/fobject1.Rdata")
 plot(fobject1)
-# x +
-#   ggtitle("") +
-#   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
-#   theme(axis.title = element_text(size = 18),
-#         axis.text = element_text(size = 16),
-#         rect = element_rect(size = 12))
+
 ```
 
 ## Accuracy and Fairness for the Initial Models
@@ -273,7 +268,7 @@ kable(table(compas_train[pref_ind,]$Two_yr_Recidivism, compas_train[pref_ind,]$E
 
 ## Disparate Impact Removal
 
-```{r fap2, echo=FALSE, out.width='100%', results='hide', message = FALSE}
+```{r fap2, echo=FALSE, out.width='100%', results='hide', message = FALSE, warning=FALSE}
 
 load("models/fobject2.Rdata")
 fap <- performance_and_fairness(fobject2, fairness_metric = "STP",
@@ -290,7 +285,7 @@ x +
 
 ## Uniform Resampling 
 
-```{r fap3, echo=FALSE, out.width='100%', results='hide', message = FALSE}
+```{r fap3, echo=FALSE, out.width='100%', results='hide', message = FALSE, warning=FALSE}
 
 load("models/fobject3.Rdata")
 fap <- performance_and_fairness(fobject3, fairness_metric = "STP",
@@ -324,7 +319,7 @@ x +
 
 ## Threshold Adjustment 
 
-```{r cutoff-rf, echo=FALSE, out.width='100%',  results='hide', message=FALSE, message=FALSE, warning=FALSE}
+```{r cutoff-rf, echo=FALSE, out.width='100%',  results='hide', message=FALSE, , warning=FALSE, warning=FALSE}
 
 load("models/fobject_co.Rdata")
 
