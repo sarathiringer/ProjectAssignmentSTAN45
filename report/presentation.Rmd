@@ -14,13 +14,10 @@ knitr::opts_chunk$set(echo = FALSE)
 library(summarytools)
 library(tidyverse)
 library(fairmodels)
-<<<<<<< HEAD
-
-=======
+library(tidymodels)
 library(knitr)
 library(kableExtra)
 library(DALEXtra)
->>>>>>> jonathan
 
 compas <- fairmodels::compas
 COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian") %>% 
@@ -30,9 +27,9 @@ COMPAS <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasi
 COMPAS$Ethnicity <- droplevels(COMPAS$Ethnicity)
 
 
-# split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
-# compas_train <- training(split)
- y_numeric <- as.numeric(COMPAS$Two_yr_Recidivism)-1
+split <- initial_split(COMPAS, prop = 0.8, strata = "Two_yr_Recidivism")
+compas_train <- training(split)
+y_numeric <- as.numeric(compas_train$Two_yr_Recidivism)-1
 
 ```
 
@@ -59,7 +56,7 @@ In recent years, many scandalous examples have shown that statistical models tra
 
 - Correlation between outcome $y$ and protected charateristic $x_p$
 - Correlation between important predictors $\boldsymbol{x}_i$ and protected carachteristic $x_p$
-- Undersampling of groups with protected carachteristic $x_p$
+- Under/over sampling of groups with protected carachteristic $x_p$
 
 ## Possible Solutions
 
@@ -90,14 +87,61 @@ $$
 \small
 ```{r desc, results='asis', echo=FALSE}
 
-dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE  )
+dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE, na.col = FALSE)
 
 ```
 \normalsize
 
+## Data
+**Variable**  | **Type** | **Values** | **%** 
+------ | ------|-------------------------------------------
+Two_yr_Recidivism | Factor | 1 / 0 | 53 / 47
+Number_of_Priors  | Numerical | Mean (sd) : 3.5 (4.9) | 36 distinct
+Above45 | Factor | 1 / 0 | 79.2 / 20.8
+Below25 | Factor | 1 / 0 | 78.1 / 21.9
+Misdemeanor | Factor | 1 / 0 | 65.2 / 34.8
+Ethnicity | Factor | African_American / Caucasian | 60.2 / 39.8
+Sex | Factor | Female / Male | 19.5 / 80.5
+
+## Descriptives
+
+```{r descplots, results='asis', echo=FALSE}
+
+df_des <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian") %>% 
+  rename(Below25 = Age_Below_TwentyFive) %>% 
+  rename(Above45 = Age_Above_FourtyFive)
+
+g1 <- ggplot(compas, aes(x = Ethnicity, fill = Ethnicity)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+g2 <- ggplot(df_des, aes(x = Ethnicity, fill = Ethnicity)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+g3 <- ggplot(df_des, aes(x = Sex, fill = Sex)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+g4 <- ggplot(df_des, aes(x = Two_yr_Recidivism, fill = Two_yr_Recidivism)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+cowplot::plot_grid(g1, g2, g3, g4)
+
+```
+
 ## Models
 
-Model  | Tuning 
+**Model**  | **Tuning** 
 ------ | -------------------------------------------------
 Random Forest | Predictors at each split 
 Artificial neural net  | Number of hidden nodes 
@@ -120,7 +164,37 @@ x +
 
 ## Disparate Impact Removal
 
+Removes differences between groups while preserving it within the groups. Example: Number of priors. 
+
+```{r dir, results='asis', echo=FALSE}
+
+
+df_rem <- compas_train[,c("Number_of_Priors", "Ethnicity")]
+df_rem$Number_of_Priors_Rem1.0 <- disparate_impact_remover(df_rem, protected = 'Ethnicity', features_to_transform = 'Number_of_Priors', lambda = 1.0)$Number_of_Priors
+
+g1 <- ggplot(df_rem, aes(x = Number_of_Priors, color = Ethnicity, fill = Ethnicity)) +
+  geom_density(alpha = 0.4) +
+  theme_bw() +
+  labs(subtitle = "No removal") +
+  xlim(c(0, 20)) +
+  theme(legend.position = 'none')
+
+g2 <- ggplot(df_rem, aes(x = Number_of_Priors_Rem1.0, color = Ethnicity, fill = Ethnicity)) +
+  geom_density(alpha = 0.4) +
+  labs(subtitle = "1.0 removal") +
+  theme_bw() +
+  xlim(c(0, 20)) +
+  theme(legend.position = 'none')
+
+cowplot::plot_grid(g1, g2)
+
+```
+
 ## Resampling
+
+Using undersampling and oversampling to even out inequalities between the depraved
+and privileged groups having positive and negative outcome attributes
+respectively. 
 
 ```{r joint-org, results='asis', echo=FALSE}
 
@@ -133,11 +207,15 @@ kable(table(COMPAS$Two_yr_Recidivism, COMPAS$Ethnicity), caption = "Joint distri
 
 ## Uniform Resampling
 
+Aim: Make the joint
+distribution of `Ethnicity` and `Two_yr_Recidivism` uniform by duplicating some
+observations and removing others.
+
 ```{r joint-uni, results='asis', echo=FALSE}
-uniform_indexes <- resample(protected = COMPAS$Ethnicity,
+uniform_indexes <- resample(protected = compas_train$Ethnicity,
                             y = y_numeric)
 
-kable(table(COMPAS[uniform_indexes,]$Two_yr_Recidivism, COMPAS[uniform_indexes,]$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism, uniform resampling",
+kable(table(compas_train[uniform_indexes,]$Two_yr_Recidivism, compas_train[uniform_indexes,]$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism, uniform resampling",
       format = "latex", booktabs = T)%>%
   kable_styling(latex_options = c("hold_position")) %>% 
   add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
@@ -149,6 +227,20 @@ kable(table(COMPAS[uniform_indexes,]$Two_yr_Recidivism, COMPAS[uniform_indexes,]
 - Very similar to uniform 
 - Borderline observations skipped or duplicated more often
 - Evaluated by logistic regression
+
+```{r joint-pref, results='asis', echo=FALSE}
+probs <- glm(Two_yr_Recidivism ~., data = compas_train, family = binomial())$fitted.values
+pref_ind <- resample(protected = compas_train$Ethnicity,
+                     y = y_numeric,
+                     type = "preferential",
+                     probs = probs)
+
+kable(table(compas_train[pref_ind,]$Two_yr_Recidivism, compas_train[pref_ind,]$Ethnicity), caption = "Joint distribution of Ethnicity and Recidivism, preferential resampling",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position")) %>% 
+  add_footnote(label = 'Note: 1 = Recidivism', notation = "none")
+
+```
 
 ## Comparison
 
@@ -165,7 +257,7 @@ x +
         axis.title=element_text(size=14))
 ```
 
-## Cutoff adjustment 
+## Threshold Adjustment 
 
 ```{r cutoff-rf, echo=FALSE, out.width='100%',  results='hide', message=FALSE}
 
@@ -180,7 +272,7 @@ plot(ceteris_paribus_cutoff(fobject_co,
   
 ```
 
-## Comparing cutoff models
+## Comparing Models with Different Thresholds
 
 ```{r fap-rf-comp, echo=FALSE, out.width='100%',  results='hide'}
 
@@ -193,7 +285,7 @@ plot(fap) +
   
 ```
 
-## Evaluation on test data - comparison
+## Evaluation on Test Data - Comparison
 
 ```{r fap-test, echo=FALSE, out.width='100%', fig.height=6,  results='hide'}
 
@@ -208,7 +300,10 @@ plot(fap) +
 ```
 
 
-## Final Model Performance
+## Final Model Performance and Conclusion
+
+- The resampling methods seems to have best effect on minimising parity loss while also preserving accuracy rates
+- Random Forest looked most promising, but while tested on new data Logistic Regression, Artifical Neural Network and AdaBoost were equally strong competitors (all resampled)
 
 ```{r modelperf, results='asis', echo = FALSE}
 load("models/rf_test_exp_resa_uni.Rdata")
@@ -222,6 +317,12 @@ kable(x, caption = "Performance",
 ```
 
 
-## Conclusions
+## General Conclusions
 
+- It is possible to build models who satisfy some fairness criteria without a too large drop in accuracy
+- Decisions for fair models include: fairness measure, evaluation metrics and choice of methods
+- Less complex methods can be found amongst resampling and threshold adjustment
+- As always, what type of data we are dealing with will largely impact the results of different methods (for example why disparate impact remover didn't work)
+
+## References
 

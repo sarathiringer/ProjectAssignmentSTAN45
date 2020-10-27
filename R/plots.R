@@ -58,5 +58,77 @@ ggplot(df, aes(x = performance_metric, y = fairness_metric, col = group)) +
        color = "Model",
        shape = "Bias Mitigation Method")
 
+df$labels <- str_wrap(df$labels, 5)
+
+ggplot(df, aes(x = performance_metric, y = fairness_metric, col = group)) +
+  geom_point(size = 4) +
+  geom_text(aes(label = labels), nudge_y = 0.02, nudge_x = -0.003, lineheight = 0.9) +
+  labs(x = "Accuracy", 
+       y = "Inversed parity loss (demographic parity)", 
+       color = "Model") +
+  theme_bw() +
+  xlim(c(0.63, 0.69)) +
+  ylim(c(0.1, 0.8))
 
 
+## Disparate impact remover
+
+summary(compas_train)
+
+df_rem <- compas_train[,c("Number_of_Priors", "Ethnicity")]
+df_rem$Number_of_Priors_Rem1.0 <- disparate_impact_remover(df_rem, protected = 'Ethnicity', features_to_transform = 'Number_of_Priors', lambda = 1.0)$Number_of_Priors
+
+g1 <- ggplot(df_rem, aes(x = Number_of_Priors, color = Ethnicity, fill = Ethnicity)) +
+  geom_density(alpha = 0.4) +
+  theme_bw() +
+  labs(subtitle = "No removal") +
+  xlim(c(0, 20)) +
+  theme(legend.position = 'none')
+
+g2 <- ggplot(df_rem, aes(x = Number_of_Priors_Rem1.0, color = Ethnicity, fill = Ethnicity)) +
+  geom_density(alpha = 0.4) +
+  labs(subtitle = "1.0 removal") +
+  theme_bw() +
+  xlim(c(0, 20)) +
+  theme(legend.position = 'none')
+
+gridExtra::grid.arrange(g1, g2, ncol=2)
+
+
+## Descriptives
+
+df_des <- compas
+
+ggplot(df_des, aes(x = Ethnicity, fill = Ethnicity)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+ggplot(df_des, aes(x = Sex, fill = Sex)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+ggplot(df_des, aes(x = Two_yr_Recidivism, fill = Two_yr_Recidivism)) +
+  geom_bar() +
+  theme_bw() +
+  scale_fill_brewer(palette="Dark2") +
+  labs(y = "Number of observations")
+
+summary(compas)
+
+
+
+load("models/fobject_all.Rdata")
+fap <- performance_and_fairness(fobject_all, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x + 
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  theme(legend.position = "",
+        axis.title=element_text(size=14))
+
+plot(x)
