@@ -587,7 +587,7 @@ rm(ab_mod, ab_rec, ab_wf, ab_res, final_ab_wf, ab_best)
 
 
 
-fobject <- fairness_check(fobject1,
+fobject2 <- fairness_check(fobject1,
                           rf_explainer_mit, nn_explainer_mit, boost_explainer_mit,
                           lr_explainer_mit, #knn_explainer_mit,
                           protected = compas_train$Ethnicity,
@@ -614,12 +614,12 @@ fobject <- fairness_check(fobject1,
 # fheatmap <- fairness_heatmap(fobject)
 # plot(fheatmap, text_size = 3)
 
-fap <- performance_and_fairness(fobject, fairness_metric = "STP")
-plot(fap)
-
-
-model_performance(rf_explainer)
-print(fobject, colorize = FALSE)
+# fap <- performance_and_fairness(fobject, fairness_metric = "STP")
+# plot(fap)
+# 
+# 
+# model_performance(rf_explainer)
+# print(fobject, colorize = FALSE)
 
 
 
@@ -902,7 +902,7 @@ rm(ab_mod, ab_rec, ab_wf, ab_res, final_ab_wf, ab_best)
 
 
 
-fobject <- fairness_check(fobject, rf_explainer_resa_uni, nn_explainer_resa_uni,
+fobject3 <- fairness_check(fobject2, rf_explainer_resa_uni, nn_explainer_resa_uni,
                           boost_explainer_resa_uni, lr_explainer_resa_uni, #knn_explainer_resa_uni,
                           verbose = FALSE,
                           colorize = FALSE)
@@ -1196,7 +1196,7 @@ rm(ab_mod, ab_rec, ab_wf, ab_res, final_ab_wf, ab_best)
 
 
 
-fobject_all <- fairness_check(fobject, rf_explainer_resa_pref, nn_explainer_resa_pref,
+fobject_all <- fairness_check(fobject3, rf_explainer_resa_pref, nn_explainer_resa_pref,
                           boost_explainer_resa_pref, lr_explainer_resa_pref, #knn_explainer_resa_pref,
                           verbose = FALSE,
                           colorize = FALSE)
@@ -1213,8 +1213,11 @@ fobject_test <- fairness_check(rf_test_exp, nn_test_exp, lr_test_exp, boost_test
 plot(performance_and_fairness(fobject_test, fairness_metric = "STP"))
 
 save(fobject1, file = "report/models/fobject1.Rdata")
+save(fobject2, file = "report/models/fobject2.Rdata")
+save(fobject3, file = "report/models/fobject3.Rdata")
 save(fobject_all, file = "report/models/fobject_all.Rdata")
 save(fobject_test, file = "report/models/fobject_test.Rdata")
+
 
 
 
