@@ -93,6 +93,10 @@ $$
 <!-- \normalsize -->
 
 ## Data
+
+The COMPAS^[Correctional Offender Management Profiling for Alternative
+Sanctions]-data
+
 **Variable**  | **Type** | **Values** | **%** 
 ------ | ------|-------------------------------------------
 Two_yr_Recidivism | Factor | 1 / 0 | 53 / 47
