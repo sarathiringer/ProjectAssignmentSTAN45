@@ -61,16 +61,16 @@ discrimination and fairness when collecting data, training models and using
 predictions for decision-making.  
 
 In this project we have looked at methods for dealing with potential
-discrimination in models. First, we present x ways of measuring fairness in
+discrimination in models. First, we present two ways of measuring fairness in
 order to be able to evaluate it. In this part we also discuss different methods
 of dealing with bias. Secondly, we train several statistical models on a dataset
 were we know that discriminatory bias is present. We then use the R package
 `fairmodels` to evaluate how the model performed both in terms of accuracy and
 fairness. Lastly, we use a pre-processing bias mitigation method called impact
-disparate remover to reduce the presence of bias in the models. We evaluate the
-success of this tool and discuss it in relation to the different models.  
-
-For simplicity, this project focuses solely on classification methods and the case of a binary protected variable. 
+disparate remover and two resampling methods for reducing the presence of bias in
+the models. We evaluate the success of this tool and discuss it in relation to
+the different models. For simplicity, this project focuses solely on
+classification methods and the case of a binary protected variable.
 
 ## Understanding Fairness in Statistical Models
 
@@ -91,13 +91,13 @@ our decision and $X$ the protected variable in question:
 $$
 P(Y=1 | X=1) = P(Y=1 | X=0)
 $$
-This rule will enhance rules which classify the same fraction in each group as
+This criterion will enhance decision rules which classify the same fraction in each group as
 positive. This might appear unappealing, as it has a way of "forcing" equality.
 However, as @goel_non-discriminatory_2018 point out, many classifiers impact
 decisions which create future labels in future training data, and as such a lack
 of demographic parity risks causing ever-looping cycles of discrimination.
-Another negative with this measure, however, is that it makes sure we cannot use
-$X$ as a predictor which we in some circumstances want.
+Another negative with this measure, however, is that it makes renders 
+$X$ as a predictor useless, even though we in some cases want to use it.
 
 ### Equalised odds
 
@@ -139,7 +139,7 @@ techniques:
 
 * Disparate impact removal 
     - Introduced in @feldman_certifying_2015. This is a geometric method reshaping 
-      distributions on numerical variables conditioned on the protected. It is generally an apprioriate method when there are non-protected variables that are correlation with the protected variable, which means using them for prediction introduces disparate treatment by the model.
+      distributions on numerical variables conditioned on the protected. It is generally an apprioriate method when there are non-protected variables that are correlated with the protected variable, which means using them for prediction introduces disparate treatment by the model.
 
 * Two resampling methods introduced in @kamiran_data_2012. In a scenario
   with a binary protected variable and a binary classification problem
@@ -150,7 +150,7 @@ techniques:
     - Uniform resampling, where each observation has equal porbability to 
       be duplicated or skipped to increase or decrease the size of a group.
     - Preferential resampling, where observations close to the decision boundary
-      (of a classifier) gets higher priority for being duplicated or skipped.
+      getting classified in one of the two outcome groups gets higher priority for being duplicated or skipped.
 
 ### Training
 
@@ -161,7 +161,7 @@ them from having an unproportionally large impact in a classifier. Among
 classical apporaches ridge and lasso regression can be mentioned
 [@hastie_elements_2009]. Bias have been shown to sometimes remain in models
 despite the removal of the protected attribute, due to their correlation to
-other non-sensitive attributes (källa). In this sense, penalizing variables that
+other non-sensitive attributes (källa [tror du verkligen det behövs?]). In this sense, penalizing variables that
 are highly correlated to protected features looks like a promising solution.
 
 A similar approach, also focusing on the learning phase, is the *weighted sum of
@@ -174,8 +174,7 @@ It has even been suggested that one solution could be to build a multiple of
 models - i.e. one for each social group. Such an approach have proved to be
 succesful in some cases [@calders_verwer_2010], but has a clear disatvantage
 when it comes to dealing with multiple (intertwined) protected variables.
-
-Dut to time constraints, we are not going to investigate any of these methods in practice. 
+Due to time constraints, we are not going to investigate any of these methods in practice. 
 
 #### Prediction
 
@@ -213,6 +212,8 @@ For the present purpose we filtered the data on `Ethnicity`, for `Caucasian` and
 `African_American` to create a binary protected
 variable. Rendering $n$ to a total of $5278$ with no missing values. A summary
 of the dataset can be seen below.
+
+\noindent
 ```{r desc, results='asis', echo=FALSE}
 
 dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE)
@@ -229,7 +230,8 @@ respectively. That is, in our case, the methods try to make the joint
 distribution of `Ethnicity` and `Two_yr_Recidivism` uniform by duplicating some
 observations and removing others. In effect undersampling some groups and oversampling
 others. If we look at the original joint distribution of `Ethnicity` and `Two_yr_Recidivism`
-from the training data in table \@ref(tab:joint-org).
+from the training data in table \@ref(tab:joint-org) it can be seen that there is
+imbalance between the groups and their representation. 
 
 ```{r joint-org, results='asis', echo=FALSE}
 
@@ -260,7 +262,9 @@ probabilities, where borderline cases (i.e. cases that is on the border of being
 classified as either 1 or 0 in `Two_yr_Recidivism`) are duplicated or removed
 more frequently than "certain" cases. In table \@ref(tab:joint-uni) the new
 joint distribution when using uniform resampling can be seen and in table
-\@ref(tab:joint-pref) preferential sampling has been used.
+\@ref(tab:joint-pref) preferential sampling has been used. As can be seen, the
+distributions are identical even though different observations have been
+resampled.
 
 ```{r joint-uni, results='asis', echo=FALSE}
 uniform_indexes <- resample(protected = compas_train$Ethnicity,
@@ -287,8 +291,6 @@ kable(table(compas_train[pref_ind,]$Two_yr_Recidivism, compas_train[pref_ind,]$E
 
 ```
 
-As can be seen, the distributions are similar even though different observations have
-been resampled. 
 
 ### Disparate Impact Remover
 
@@ -358,7 +360,9 @@ we can say that our model is completely fair. In 1979 the US Equal Employment
 Opportunity Commission deemed that if this ratio falls below 0.8 disparate
 impact is present, known as the 80% rule [@feldman_certifying_2015]. Hence, we
 want a model that satisfies the above criteria as closely as possible but still
-yield a high accuracy. The plot below in figure \@ref(fig:fobject1) shows the metrics on our fairness criterias. 
+yield a high accuracy. The plot below in figure \@ref(fig:fobject1) shows the metrics of
+our fairness criterias from the fitted models. Note that the x-axis represent "parity loss"
+i.e. the distance from 1 of the fairness ratio.
 
 (ref:fobject1-text) All models evaluated against our two measures on fairness. The 0.2 line indicates the kind of unequality we would be willing to accept.
 
@@ -378,7 +382,7 @@ ggplot(fobject_2, aes(x = model, y = score, fill = model)) +
   geom_hline(yintercept = 0.2, linetype = 'dashed') +
   coord_flip() +
   theme_minimal() +
-  labs(x = '', y = 'Fairness Metric', fill = 'Model') +
+  labs(x = '', y = 'Fairness Metric (parity loss)', fill = 'Model') +
   scale_fill_brewer(palette="Set2") +
   facet_grid(metric ~ .) +
   theme(text = element_text(size = 13))
@@ -391,7 +395,7 @@ then compare the acquired accuracy of each model together with parity loss
 evaluated by this measure (note the acquired accuracy is measured on training
 data) as seen in figure \@ref(fig:fap1).
 
-(ref:fap1-text) Accuracy and fairness comparison for training data on the fitted models. Note that the y-axis is inverted. This is not the ratio explained previously but the "parity loss" which should be interpreted as the difference between the parity ratio and 1 [IS THIS TRUE??]. Hence, a measure that we want to minimise. 
+(ref:fap1-text) Accuracy and fairness comparison for training data on the fitted models. Note that the y-axis is inverted. 
 
 ```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide', message=FALSE, warning=FALSE}
 
@@ -408,12 +412,12 @@ x +
         axis.title=element_text(size=14), aspect.ratio = 0.7)
 ```
 
-Figure \@ref(fig:fap1) tells us that using demographic parity as a fairness measure
-none of our models satisfy the 80% rule and thus disparate impact is present. Using
+Using demographic parity as a fairness measure
+none of our models would satisfy the 80% rule and thus disparate impact is present. Using
 the preprocessing techniques previously described we now fit the models on these
 processed datasets and compare which model and processing technique yields best
 results both in terms of fairness and accuracy (upper right corner of \@ref(fig:fap1)).
-The results can be seen in \@ref(fig:fap-all).
+The results can be seen in figure \@ref(fig:fap-all).
 
 (ref:fap-all-text) Accuracy and fairness comparison for preprocessed training data on the fitted models. The three methods can be seen in the suffixes to the models: "rem" = disparate impact removal, "resa pref" = preferential resampling and "resa unif" = uniform resampling. Note that the y-axis is inverted.
 
@@ -461,7 +465,7 @@ be worth any potential drop in accuracy. This comparison can be seen in
 figure \@ref(fig:cutoff-rf). Adjusting cutoffs can have quite large effect,
 however, since all models already satisfies the 80% rule we want to argue
 that the drop in accuracy is not worth it. Hence, if the goal of the analysis
-is to find a single model we would choose Random Forest trained on uniformly
+is to find a single model we would choose Random Forest trained on preferentially
 resampled data. As a coincidence it turns out that this model produces the 
 smallet parity loss as measured by equlised odds, further increasing our confidence.
 
@@ -475,8 +479,8 @@ fap <- performance_and_fairness(fo_comp, fairness_metric = "STP")
 plot(fap) +
   ggtitle("") +
   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
-  ylim(0.75, 0.1) +
-  xlim(0.635, 0.7) +
+  # ylim(0.75, 0) +
+  # xlim(0.635, 0.7) +
     theme(legend.position = "",
         axis.title=element_text(size=14), aspect.ratio = 0.7)
   
@@ -489,9 +493,9 @@ data. Due to the nature of our analysis it might also be interesting to see how
 well it performs in comparison to the other models fitted. Accuracy and parity
 loss as measured by demographic parity for all models using unseen testing data
 can be seen in figure \@ref(fig:fap-test) and our chosen model appears to have a
-satisfactory performance on test data as well, however, it just barely meets the
-80% criterion and it is no longer the model with best accuracy among the ones 
-with a demographic parity below $0.2$. 
+satisfactory performance on test data as well, however, it no longer meets the
+80% criterion and unfortunately it also has the lowest accuracy among all models
+fitted.
 
 (ref:fap-test-text) All fitted models and their respective bias-mitigated version, evaluated on previously unseen test data. As aspected, accuracy is slightly lower than for the training data. We can also note that only four of the 16 models has a parity loss of 0.2 or higher. 
 
@@ -502,25 +506,32 @@ load("models/fobject_test.Rdata")
 fap <- performance_and_fairness(fobject_test, fairness_metric = "STP")
 plot(fap) +
   ggtitle("") +
-  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  theme(legend.position = "none")
   
 ```
 
-```{r table-test, echo=FALSE, fig.cap="(ref:table-test-text)", out.width='100%', fig.height=6,  results='hide', message=FALSE, warning=FALSE}
+```{r tabledata, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 
 ### Varför vill inte denna bli en tabell??
 
 load("models/fobject_test.Rdata")
+fap <-  performance_and_fairness(fobject_test, fairness_metric = "STP", performance_metric = "accuracy")
 
-fap <- performance_and_fairness(fobject_test, fairness_metric = "STP")
-
-kable(table(data.frame(fap$paf_data)), caption = "Model Performance and Fairness on Test Data",
-      format = "latex", booktabs = T)%>%
-  kable_styling(latex_options = c("hold_position"))
-  
 ```
 
+```{r table-test, echo=FALSE,  results='asis', message=FALSE, warning=FALSE}
 
+### Varför vill inte denna bli en tabell??
+
+kable(data.frame(fap$paf_data), caption = "Model Performance and Fairness on Test Data",
+      format = "latex", booktabs = T,
+      col.names = c("Demographic parity",
+                    "Accuracy",
+                    "Model"))%>%
+  kable_styling(latex_options = c("HOLD"))
+  
+```
 
 # Discussion
 
@@ -801,7 +812,7 @@ boost_test_exp <- update_data(boost_explainer, data = compas_test[,-1],
 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
-knitr::opts_chunk$set(eval = FALSE)
+
 
 # Disparate impact remover
 compas_train_mit <- compas_train %>% 
