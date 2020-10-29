@@ -58,21 +58,19 @@ and [Amazon’s automated recruitment tool unrighteously favoring
 men](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G).
 However unintentional, these examples show the need for an awareness of
 discrimination and fairness when collecting data, training models and using
-predictions for decision-making.
+predictions for decision-making.  
 
 In this project we have looked at methods for dealing with potential
 discrimination in models. First, we present x ways of measuring fairness in
 order to be able to evaluate it. In this part we also discuss different methods
 of dealing with bias. Secondly, we train several statistical models on a dataset
 were we know that discriminatory bias is present. We then use the R package
-*fairmodels* to evaluate how the model performed both in terms of accuracy and
+`fairmodels` to evaluate how the model performed both in terms of accuracy and
 fairness. Lastly, we use a pre-processing bias mitigation method called impact
 disparate remover to reduce the presence of bias in the models. We evaluate the
-success of this tool and discuss it in relation to the different models.
+success of this tool and discuss it in relation to the different models.  
 
-For simplicity, this project focuses solely on classification methods. (maybe present more restrictions)   
-
-[Something on terminology... Maybe small appendix.]  
+For simplicity, this project focuses solely on classification methods and the case of a binary protected variable. 
 
 ## Understanding Fairness in Statistical Models
 
@@ -109,7 +107,7 @@ if $G$ is the predictor we want to use:
 $$
 P(G=1|X=0, Y=1) = P(G=1|X=1, Y=1)
 $$
-This measure ensures that the true positive rates of the classifier are the same for both groups of $X$.
+This measure ensures that the true positive rates of the classifier are the same for both groups of $X$. It can be seen as a measure of "equal opportunity" and hence doesn't keep models from unequal predictions (in terms of outcomes). As such, it is sometimes seen as a "weaker" measure on fairness.
 
 ## Optimising for Fairness
 
@@ -141,7 +139,7 @@ techniques:
 
 * Disparate impact removal 
     - Introduced in @feldman_certifying_2015. This is a geometric method reshaping 
-      distributions on numerical variables conditioned on the protected. 
+      distributions on numerical variables conditioned on the protected. It is generally an apprioriate method when there are non-protected variables that are correlation with the protected variable, which means using them for prediction introduces disparate treatment by the model.
 
 * Two resampling methods introduced in @kamiran_data_2012. In a scenario
   with a binary protected variable and a binary classification problem
@@ -172,14 +170,12 @@ models both the historical bias in the data and empirical bias imposed by the
 original algorithm in order to establish a "poportionally fair" classifier by
 restricting the optimization space of a logistic regression model.
 
-posing constraint in the learning phase, dealing with correlations, penalty
-
 It has even been suggested that one solution could be to build a multiple of
 models - i.e. one for each social group. Such an approach have proved to be
 succesful in some cases [@calders_verwer_2010], but has a clear disatvantage
 when it comes to dealing with multiple (intertwined) protected variables.
 
-We will not deal with any such methods though, so perhaps remove this section?
+Dut to time constraints, we are not going to investigate any of these methods in practice. 
 
 #### Prediction
 
@@ -206,8 +202,8 @@ the compas^[Correctional Offender Management Profiling for Alternative
 Sanctions] data made available by Florida Department of Corrections and
 ProPublica in 2016. The dataset sourced from the `fairmodels` package, slightly
 modified from the original COMPAS dataset, is a collection of $n = 6172$ observations with the
-variables: ` `r names(compas)` `. Where `Two_yr_Recidivism` is the variable we
-want to predict and indicates whether an inmate have made another offense within
+variables: ` `r names(compas)` `. `Two_yr_Recidivism` is the variable we
+want to predict. It indicates whether an inmate have made another offense within
 two years of release. As such, the dataset is being used to decide on the
 penalty of criminals. The compas data is an excellent case for studying
 discriminatory algorithms, as it both exhibits bias and is being used for actual
@@ -223,7 +219,9 @@ dfSummary(COMPAS, silent = TRUE, graph.col = FALSE, valid.col = FALSE)
 
 ```
 
-### Preprocessed data
+## Pre-Processing Methods for Bias Mitigation
+
+### Resampling
 
 The two resampling methods aims to even out inequalities between the depraved
 and privileged groups having positive and negative outcome attributes
@@ -292,7 +290,43 @@ kable(table(compas_train[pref_ind,]$Two_yr_Recidivism, compas_train[pref_ind,]$E
 As can be seen, the distributions are similar even though different observations have
 been resampled. 
 
-## Models
+### Disparate Impact Remover
+
+Disparate impact remover, as proposed by @feldman_certifying_2015, is a method to adjust distributions. The algorithm for this has been implemented in `fairmodels` and can be used on continous variables. This is unfurtunate since only one of our precidtors, `Number_of_Priors`, is non-categorical. Strictly speaking, as it is a measure of counting, it is not even truly continous. Therefore, we can expect it to have a limited effect.
+
+In figure \@ref(fig:dir), we can see the distribution of `Number_of_Priors` amongst the two groups. We note two things. First, the groups had a difference in their respective distributions, but it wasn't very large. Secondly, applying Disparate Impact Remover seems to have introduced some kind of grouping along the range of values, leading to the very curvy nature of the density function. 
+
+(ref:dir-text) The distribution of `Number_of_Priors` for the two ethnicity groups. To the left, the original distirbutions. To the right, the distributions after removal of disparate impact. 
+
+```{r dir, results='asis', fig.cap="(ref:dir-text)", echo=FALSE, message=FALSE, warning=FALSE}
+
+
+df_rem <- compas_train[,c("Number_of_Priors", "Ethnicity")]
+df_rem$Number_of_Priors_Rem1.0 <- disparate_impact_remover(df_rem, protected = 'Ethnicity', features_to_transform = 'Number_of_Priors', lambda = 1.0)$Number_of_Priors
+
+g1 <- ggplot(df_rem, aes(x = Number_of_Priors, color = Ethnicity, fill = Ethnicity)) +
+  geom_density(alpha = 0.4) +
+  theme_bw() +
+  labs(subtitle = "No removal") +
+  xlim(c(0, 20)) +
+  theme(legend.position = c(0.7, 0.9),
+        legend.background = element_rect(fill="transparent", 
+                                  size=0.5, linetype="solid")) +
+  labs(y = "density function", x = "Number_of_Priors")
+
+g2 <- ggplot(df_rem, aes(x = Number_of_Priors_Rem1.0, color = Ethnicity, fill = Ethnicity)) +
+  geom_density(alpha = 0.4) +
+  labs(subtitle = "1.0 removal") +
+  theme_bw() +
+  xlim(c(0, 20)) +
+  theme(legend.position = 'none') +
+  labs(y = "density function", x = "Number_of_Priors after bias mitigation")
+
+cowplot::plot_grid(g1, g2)
+
+```
+
+### Models
 
 We trained five different models on the COMPAS data tuned for various
 parameters. Each of these models was then fit again but on data having
@@ -324,15 +358,42 @@ we can say that our model is completely fair. In 1979 the US Equal Employment
 Opportunity Commission deemed that if this ratio falls below 0.8 disparate
 impact is present, known as the 80% rule [@feldman_certifying_2015]. Hence, we
 want a model that satisfies the above criteria as closely as possible but still
-yield a high accuracy. Let us for simplicity solely consider demographic parity
-(this also often referred to as statistical parity) as a measure for now. We can
+yield a high accuracy. The plot below in figure \@ref(fig:fobject1) shows the metrics on our fairness criterias. 
+
+(ref:fobject1-text) All models evaluated against our two measures on fairness. The 0.2 line indicates the kind of unequality we would be willing to accept.
+
+```{r fobject1, fig.cap="(ref:fobject1-text)", echo=FALSE, out.width='100%', results='hide', message=FALSE, warning=FALSE}
+
+load("models/fobject1.Rdata")
+
+fobject1.2 <- expand_fairness_object(fobject1)
+
+fobject_2 <- fobject1.2 %>% 
+  filter(metric == "TPR" | metric == "STP") %>% 
+  mutate(metric = case_when(metric == "TPR" ~ "Equalized odds \nratio",
+                            metric == "STP"  ~ "Demographic parity \nratio"))
+  
+ggplot(fobject_2, aes(x = model, y = score, fill = model)) +
+  geom_col() +
+  geom_hline(yintercept = 0.2, linetype = 'dashed') +
+  coord_flip() +
+  theme_minimal() +
+  labs(x = '', y = 'Fairness Metric', fill = 'Model') +
+  scale_fill_brewer(palette="Set2") +
+  facet_grid(metric ~ .) +
+  theme(text = element_text(size = 13))
+
+```
+
+Let us for simplicity solely consider demographic parity
+(this also often referred to as statistical parity) as a measure from now on. We can
 then compare the acquired accuracy of each model together with parity loss
 evaluated by this measure (note the acquired accuracy is measured on training
 data) as seen in figure \@ref(fig:fap1).
 
 (ref:fap1-text) Accuracy and fairness comparison for training data on the fitted models. Note that the y-axis is inverted. This is not the ratio explained previously but the "parity loss" which should be interpreted as the difference between the parity ratio and 1 [IS THIS TRUE??]. Hence, a measure that we want to minimise. 
 
-```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide'}
+```{r fap1, echo=FALSE, fig.cap="(ref:fap1-text)", out.width='100%', results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject1.Rdata")
 fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
@@ -340,7 +401,11 @@ fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
 x <- plot(fap)
 x + 
   ggtitle("") +
-  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  ylim(0.75, 0.1) +
+  xlim(0.635, 0.7) +
+    theme(legend.position = "",
+        axis.title=element_text(size=14), aspect.ratio = 0.7)
 ```
 
 Figure \@ref(fig:fap1) tells us that using demographic parity as a fairness measure
@@ -352,7 +417,7 @@ The results can be seen in \@ref(fig:fap-all).
 
 (ref:fap-all-text) Accuracy and fairness comparison for preprocessed training data on the fitted models. The three methods can be seen in the suffixes to the models: "rem" = disparate impact removal, "resa pref" = preferential resampling and "resa unif" = uniform resampling. Note that the y-axis is inverted.
 
-```{r fap-all, echo=FALSE, fig.cap="(ref:fap-all-text)", out.width='100%', fig.height=6, results='hide'}
+```{r fap-all, echo=FALSE, fig.cap="(ref:fap-all-text)", out.width='100%', fig.height=6, results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject_all.Rdata")
 fap <- performance_and_fairness(fobject_all, fairness_metric = "STP",
@@ -360,21 +425,25 @@ fap <- performance_and_fairness(fobject_all, fairness_metric = "STP",
 x <- plot(fap)
 x + 
   ggtitle("") +
-  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model")
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  ylim(0.75, 0.1) +
+  xlim(0.635, 0.7) +
+    theme(legend.position = "",
+        axis.title=element_text(size=14), aspect.ratio = 0.7)
 ```
 
 The resampling methods seems to have best effect on minimising parity loss
 and the disparate impact removal technique even increase parity loss for
-some models. This might be due to the fact that this method can only mitigate
-numerical variables and there is only the `Number_of_Priors` variable in this dataset
-that we can mitigate. However, most of the resampled models have a parity loss of less
+some models. This is probably because of the reasons stated earlier about this method. However, most of the resampled models have a parity loss of less
 than 0.2 (i.e. they satisfy the 80% rule). Choosing the four most accurate of these
 we can investigate whether applying a different probability cutoff than the conventional
 0.5 would mitigate parity loss even further. In figure \@ref(fig:cutoff-rf) it can be
 seen how the parity measures are affected by varying the cutoffs and the values that
 would minimise demographic parity *and* equalised odds. 
 
-```{r cutoff-rf, echo=FALSE, fig.cap="CUTOFF PLOT", out.width='100%',  results='hide', message=FALSE}
+(ref:cutoff-rf-text) The four best performing models and their possible cut-off value in relation to two measures on fairness. The mark indicates the cut-off value which gives the lowest parity loss on both measures.
+
+```{r cutoff-rf, echo=FALSE, fig.cap="(ref:cutoff-rf-text)", out.width='100%',  results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject_co.Rdata")
 
@@ -396,19 +465,24 @@ is to find a single model we would choose Random Forest trained on uniformly
 resampled data. As a coincidence it turns out that this model produces the 
 smallet parity loss as measured by equlised odds, further increasing our confidence.
 
+(ref:fap-rf-comp-text) Plot of the four best model with and without optimal cut-off value implemented. Generally, a higher parity loss results in lower accuracy, illustrating the accuracy-fairness trade-off that can be present in statistical models.
 
-```{r fap-rf-comp, echo=FALSE, fig.cap="RF comparison", out.width='100%',  results='hide'}
+```{r fap-rf-comp, echo=FALSE, fig.cap="(ref:fap-rf-comp-text)", out.width='100%',  results='hide', message=FALSE, warning=FALSE}
 
 load("models/fo_comp.Rdata")
 
 fap <- performance_and_fairness(fo_comp, fairness_metric = "STP")
 plot(fap) +
   ggtitle("") +
-  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  ylim(0.75, 0.1) +
+  xlim(0.635, 0.7) +
+    theme(legend.position = "",
+        axis.title=element_text(size=14), aspect.ratio = 0.7)
   
 ```
 
-## Final model evaluation
+## Final Model Evaluation
 
 Since we now have a chosen model we want to see how it performs on out of sample
 data. Due to the nature of our analysis it might also be interesting to see how
@@ -419,7 +493,9 @@ satisfactory performance on test data as well, however, it just barely meets the
 80% criterion and it is no longer the model with best accuracy among the ones 
 with a demographic parity below $0.2$. 
 
-```{r fap-test, echo=FALSE, fig.cap="Testing", out.width='100%', fig.height=6,  results='hide'}
+(ref:fap-test-text) All fitted models and their respective bias-mitigated version, evaluated on previously unseen test data. As aspected, accuracy is slightly lower than for the training data. We can also note that only four of the 16 models has a parity loss of 0.2 or higher. 
+
+```{r fap-test, echo=FALSE, fig.cap="(ref:fap-test-text)", out.width='100%', fig.height=6,  results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject_test.Rdata")
 
@@ -429,6 +505,22 @@ plot(fap) +
   labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") 
   
 ```
+
+```{r table-test, echo=FALSE, fig.cap="(ref:table-test-text)", out.width='100%', fig.height=6,  results='hide', message=FALSE, warning=FALSE}
+
+### Varför vill inte denna bli en tabell??
+
+load("models/fobject_test.Rdata")
+
+fap <- performance_and_fairness(fobject_test, fairness_metric = "STP")
+
+kable(table(data.frame(fap$paf_data)), caption = "Model Performance and Fairness on Test Data",
+      format = "latex", booktabs = T)%>%
+  kable_styling(latex_options = c("hold_position"))
+  
+```
+
+
 
 # Discussion
 
@@ -448,5 +540,286 @@ sensitive as whether to release an inmate or not due to the accuracy (of any
 model) not even exceeding 70%.
 
 
-# References
+# Appendix: Code 
 
+The code is presented in the following way: First, we present the initial pre-processing steps we took. Then we present the code for building all five models, including training and tuning. Finally, we present the three ways that we pre-process data a-new to mitigate bias. The models were fit on this new data, but in the same way as when we initially built them, so to save some space we will not show that code once again. Finally, the models were fit on the testing data from the initial split. 
+
+## Initial Pre-Processing
+
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+
+set.seed(123)
+compas <- fairmodels::compas
+compas <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
+compas$Two_yr_Recidivism <- as.factor(ifelse(compas$Two_yr_Recidivism == '1', '0', '1'))
+compas$Ethnicity <- droplevels(compas$Ethnicity)
+
+split <- initial_split(compas, prop = 0.8, strata = "Two_yr_Recidivism")
+compas_train <- training(split)
+compas_test <- testing(split)
+
+y_numeric <- as.numeric(compas_train$Two_yr_Recidivism)-1
+y_numeric_test <- as.numeric(compas_test$Two_yr_Recidivism)-1
+
+resamples <- vfold_cv(compas_train, 5)
+  
+```
+
+## Models
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+
+###########################
+#### RANDOM FOREST ########
+###########################
+
+rf_mod <-
+  rand_forest() %>%
+  set_args(mtry = tune()) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification")
+
+rf_rec <- 
+  recipe(Two_yr_Recidivism ~., data = compas_train)  %>%
+  step_nzv(everything(), -all_outcomes())
+
+rf_wf <- 
+  workflow() %>%
+  add_model(rf_mod) %>%
+  add_recipe(rf_rec)
+
+rf_res <-  
+  rf_wf %>% 
+  tune_grid(resamples = resamples,
+            metrics = metric_set(roc_auc, accuracy),
+            control = control_grid(save_pred = TRUE))
+
+rf_best <-
+  rf_res %>% 
+  select_best(metric = "accuracy")
+
+final_wf <- 
+  rf_wf  %>%
+  finalize_workflow(rf_best)
+ 
+rf_fit <-
+  final_wf %>%
+  fit(data = compas_train)
+
+
+rf_explainer <- explain_tidymodels(rf_fit, data = compas_train[,-1],
+                                   y = y_numeric,
+                                   label = "RF")
+rf_test_exp <- update_data(rf_explainer, data = compas_test[,-1],
+                                   y = y_numeric_test, verbose = FALSE)
+
+
+###########################
+##### NEURAL NET ##########
+###########################
+
+nn_mod <- 
+  mlp(hidden_units = tune()) %>%
+  set_engine("nnet") %>%
+  set_mode("classification")
+
+nn_rec <- 
+  recipe(Two_yr_Recidivism ~ ., data = compas_train) %>%
+  step_dummy(Sex, Ethnicity, Age_Above_FourtyFive,
+             Age_Below_TwentyFive, Misdemeanor) %>%
+  step_nzv(everything(), -all_outcomes()) %>%
+  step_normalize(everything(), -all_outcomes())
+
+nn_wf <- 
+  workflow() %>%
+  add_model(nn_mod) %>%
+  add_recipe(nn_rec)
+
+nn_res <- 
+  nn_wf %>% 
+  tune_grid(resamples = resamples,
+            metrics = metric_set(roc_auc, accuracy),
+            control = control_grid(save_pred = TRUE))
+
+nn_best <- 
+  nn_res %>% 
+  select_best(metric = "accuracy")
+
+final_nn_wf <- 
+  nn_wf  %>%
+  finalize_workflow(nn_best)
+
+nn_fit <-
+  final_nn_wf %>%
+  fit(data = compas_train)
+
+nn_explainer <- explain_tidymodels(nn_fit, data = compas_train[,-1],
+                                   y = y_numeric,
+                                   label = "ANN")
+nn_test_exp <- update_data(nn_explainer, data = compas_test[,-1],
+                           y = y_numeric_test, verbose = FALSE)
+
+
+#######################
+#### LOG REG ##########
+#######################
+
+lr_mod <- 
+  logistic_reg(penalty = tune()) %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+lr_rec <- 
+  recipe(Two_yr_Recidivism ~ ., data = compas_train) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_nzv(everything(), -all_outcomes()) %>%
+  step_normalize(everything(), -all_outcomes())
+
+lr_wf <- 
+  workflow() %>% 
+  add_model(lr_mod) %>% 
+  add_recipe(lr_rec)
+
+lr_res <- 
+  lr_wf %>% 
+  tune_grid(resamples = resamples,
+            metrics = metric_set(roc_auc, accuracy),
+            control = control_grid(save_pred = T))
+
+lr_best <-
+  lr_res %>%
+  select_best(metric = "accuracy")
+
+final_lr_wf <- 
+  lr_wf  %>%
+  finalize_workflow(lr_best)
+
+lr_fit <- 
+  final_lr_wf %>%
+  fit(data = compas_train)
+
+lr_explainer <- explain_tidymodels(lr_fit,
+                                   data = compas_train[,-1],
+                                   y = y_numeric, 
+                                   label = "LR")
+lr_test_exp <- update_data(lr_explainer, data = compas_test[,-1],
+                           y = y_numeric_test, verbose = FALSE)
+
+#######################
+#### KNN ##############
+#######################
+
+
+knn_mod <-
+  nearest_neighbor(neighbors = tune()) %>%
+  set_engine('kknn') %>%
+  set_mode("classification")
+
+knn_rec <-
+  recipe(Two_yr_Recidivism ~ ., data = compas_train) %>%
+  step_bagimpute(everything()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>%
+  step_dummy(Sex)
+
+knn_wf <-
+  workflow() %>%
+  add_model(knn_mod) %>%
+  add_recipe(knn_rec)
+
+knn_res <-
+  knn_wf %>%
+  tune_grid(resamples = resamples,
+            metrics = metric_set(roc_auc, accuracy),
+            control = control_grid(save_pred = TRUE))
+
+knn_best <-
+  knn_res %>%
+  select_best(metric = "accuracy")
+
+final_knn_wf <-
+  knn_wf  %>%
+  finalize_workflow(knn_best)
+
+knn_fit <-
+  final_knn_wf %>%
+  fit(data = compas_train)
+
+knn_explainer <- explain_tidymodels(knn_fit,
+                                   data = compas_train[,-1],
+                                   y = y_numeric,
+                                   label = "KNN")
+rm(knn_mod, knn_rec, knn_wf, knn_res, final_knn_wf, knn_best)
+
+#######################
+#### BOOOSTING ########
+#######################
+
+ab_mod <- 
+  boost_tree(mtry = tune()) %>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
+
+ab_rec <- 
+  recipe(Two_yr_Recidivism ~ ., data = compas_train) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_nzv(everything(), -all_outcomes()) %>%
+  step_normalize(everything(), -all_outcomes())
+
+ab_wf <- 
+  workflow() %>% 
+  add_model(ab_mod) %>% 
+  add_recipe(ab_rec)
+
+ab_res <- 
+  ab_wf %>% 
+  tune_grid(resamples = resamples,
+            metrics = metric_set(roc_auc, accuracy),
+            control = control_grid(save_pred = T))
+
+ab_best <-
+  ab_res %>%
+  select_best(metric = "accuracy")
+
+final_ab_wf <- 
+  ab_wf  %>%
+  finalize_workflow(ab_best)
+
+ab_fit <- 
+  final_ab_wf %>%
+  fit(data = compas_train)
+
+boost_explainer <- DALEX::explain(ab_fit, data = compas_train[,-1],
+                                  y = y_numeric,
+                                  label = "AdaBoost")
+boost_test_exp <- update_data(boost_explainer, data = compas_test[,-1],
+                           y = y_numeric_test, verbose = FALSE)
+  
+```
+
+## Bias Mitigation Pre-Processing
+
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+
+# Disparate impact remover
+compas_train_mit <- compas_train %>% 
+  mutate(Number_of_Priors = as.numeric(Number_of_Priors)) %>% 
+  disparate_impact_remover(protected = compas_train$Ethnicity, 
+                           features_to_transform = c("Number_of_Priors"))
+
+# Uniform resampling
+uniform_indexes <- resample(protected = compas_train$Ethnicity,
+                            y = y_numeric)
+
+# Preferential resampling
+probs <- glm(Two_yr_Recidivism ~., data = compas_train, family = binomial())$fitted.values
+pref_ind <- resample(protected = compas_train$Ethnicity,
+                     y = y_numeric,
+                     type = "preferential",
+                     probs = probs)
+  
+```
+
+# References
