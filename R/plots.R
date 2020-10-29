@@ -132,3 +132,17 @@ x +
         axis.title=element_text(size=14))
 
 plot(x)
+
+
+## 
+
+load("models/fobject1.Rdata")
+fap <- performance_and_fairness(fobject1, fairness_metric = "STP",
+                                performance_metric = "accuracy")
+x <- plot(fap)
+x +
+  ggtitle("") +
+  labs(x = "Accuracy", y = "Inversed parity loss (demographic parity)", color = "Model") +
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 16),
+        rect = element_rect(size = 12))
