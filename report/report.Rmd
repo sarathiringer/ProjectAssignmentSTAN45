@@ -298,7 +298,7 @@ In figure \@ref(fig:dir), we can see the distribution of `Number_of_Priors` amon
 
 (ref:dir-text) The distribution of `Number_of_Priors` for the two ethnicity groups. To the left, the original distirbutions. To the right, the distributions after removal of disparate impact. 
 
-```{r dir, results='asis', fig.cap="(ref:dir-text)", out.width='100%', fig.height=3, echo=FALSE, message=FALSE, warning=FALSE}
+```{r dir, results='asis', fig.cap="(ref:dir-text)", out.width='100%', fig.height=4, echo=FALSE, message=FALSE, warning=FALSE}
 
 
 df_rem <- compas_train[,c("Number_of_Priors", "Ethnicity")]
@@ -309,7 +309,7 @@ g1 <- ggplot(df_rem, aes(x = Number_of_Priors, color = Ethnicity, fill = Ethnici
   theme_bw() +
   labs(subtitle = "No removal") +
   xlim(c(0, 20)) +
-  theme(legend.position = c(0.7, 0.9),
+  theme(legend.position = c(0.7, 0.8),
         legend.background = element_rect(fill="transparent", 
                                   size=0.5, linetype="solid")) +
   labs(y = "density function", x = "Number_of_Priors")
