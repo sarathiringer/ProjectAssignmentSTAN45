@@ -123,7 +123,7 @@ methods to optimize for fairness.
 ### Pre-Processing
 
 Since discrimination may have been present in both data collection and the
-systems (institutions, products, etc) that generated data, we might want to deal
+systems (institutions, products, etc.) that generated the data at hand, we might want to deal
 with the issue already in the pre-processing stage. Attempts to do this includes
 resampling and synthesizing data. For example, one approach with several
 suggested algorithms proposes mapping the datapoints to a new feature space were
@@ -139,15 +139,15 @@ techniques:
 
 * Disparate impact removal 
     - Introduced in @feldman_certifying_2015. This is a geometric method reshaping 
-      distributions on numerical variables conditioned on the protected. It is generally an apprioriate method when there are non-protected variables that are correlated with the protected variable, which means using them for prediction introduces disparate treatment by the model.
+      distributions on numerical variables conditioned on the protected variable. It is generally an apprioriate method when there are non-protected variables that are correlated with the protected variable, which means using them for prediction introduces disparate treatment by the model despite removal of the protected variable itself.
 
 * Two resampling methods introduced in @kamiran_data_2012. In a scenario
   with a binary protected variable and a binary classification problem
   the four sample sizes relating to the joint distribution of classes
   and protected features that would make the dataset discrimination-free
   are calculated. Stratified sampling from these two groups are then performed.
-  Observations are then resampled with one out of two techniques. 
-    - Uniform resampling, where each observation has equal porbability to 
+  Observations are resampled with one out of two techniques: 
+    - Uniform resampling, where each observation has equal probability to 
       be duplicated or skipped to increase or decrease the size of a group.
     - Preferential resampling, where observations close to the decision boundary
       getting classified in one of the two outcome groups gets higher priority for being duplicated or skipped.
@@ -161,7 +161,7 @@ them from having an unproportionally large impact in a classifier. Among
 classical apporaches ridge and lasso regression can be mentioned
 [@hastie_elements_2009]. Bias have been shown to sometimes remain in models
 despite the removal of the protected attribute, due to their correlation to
-other non-sensitive attributes (källa [tror du verkligen det behövs?]). In this sense, penalizing variables that
+other non-sensitive attributes. In this sense, penalizing variables that
 are highly correlated to protected features looks like a promising solution.
 
 A similar approach, also focusing on the learning phase, is the *weighted sum of
@@ -173,14 +173,13 @@ restricting the optimization space of a logistic regression model.
 It has even been suggested that one solution could be to build a multiple of
 models - i.e. one for each social group. Such an approach have proved to be
 succesful in some cases [@calders_verwer_2010], but has a clear disatvantage
-when it comes to dealing with multiple (intertwined) protected variables.
+when it comes to dealing with multiple (and interacting) protected variables.
 Due to time constraints, we are not going to investigate any of these methods in practice. 
 
 #### Prediction
-
 Finally, another way to remove discriminatory outcomes is by post-processing the
 predictions. For example, we normally calculate the best possible cut-off value
-with regards to accuracy in classificaiotn models (@hastie_elements_2009).
+with regards to accuracy in classificaiotn models [@hastie_elements_2009].
 Instead of only optimising for accuracy, we could include a measure of fairness
 and have it play a role in the decision of the threshold value. Another similar
 technique is to modify the cut-off value differently for each group, as proposed
@@ -211,7 +210,7 @@ who explore fairness in machine learning have chosen to study it as an example.
 For the present purpose we filtered the data on `Ethnicity`, for `Caucasian` and
 `African_American` to create a binary protected
 variable. Rendering $n$ to a total of $5278$ with no missing values. A summary
-of the dataset can be seen below.
+of the dataset can be seen below.  
 
 \noindent
 ```{r desc, results='asis', echo=FALSE}
@@ -253,9 +252,8 @@ kable(table(compas_train$Two_yr_Recidivism, compas_train$Ethnicity), caption = "
 #   add_header_above(c(" " = 2, "Analytic" = 1,  "Simulation" = 2)) 
 
 ```
-
-In uniform resampling all observations have equal probability of being
-duplicated or removed. However, in preferential resampling we fit a logisitc
+\noindent In uniform resampling all observations have equal probability of being
+duplicated or removed. However, in preferential resampling we fit a logistic
 regression model with `Two_yr_Recidivism` as outcome variable and all the other
 variables as predictors, then we use the resulting probabilities as sampling
 probabilities, where borderline cases (i.e. cases that is on the border of being
@@ -294,13 +292,13 @@ kable(table(compas_train[pref_ind,]$Two_yr_Recidivism, compas_train[pref_ind,]$E
 
 ### Disparate Impact Remover
 
-Disparate impact remover, as proposed by @feldman_certifying_2015, is a method to adjust distributions. The algorithm for this has been implemented in `fairmodels` and can be used on continous variables. This is unfurtunate since only one of our precidtors, `Number_of_Priors`, is non-categorical. Strictly speaking, as it is a measure of counting, it is not even truly continous. Therefore, we can expect it to have a limited effect.
+Disparate impact remover, as proposed by @feldman_certifying_2015, is a method to adjust distributions. The algorithm for this has been implemented in `fairmodels` and can be used on continous variables. This is unfurtunate since only one of our predictors, `Number_of_Priors`, is non-categorical. Strictly speaking, as it is a measure of counting, it is not even truly continous. Therefore, we can expect it to have a limited effect.
 
 In figure \@ref(fig:dir), we can see the distribution of `Number_of_Priors` amongst the two groups. We note two things. First, the groups had a difference in their respective distributions, but it wasn't very large. Secondly, applying Disparate Impact Remover seems to have introduced some kind of grouping along the range of values, leading to the very curvy nature of the density function. 
 
 (ref:dir-text) The distribution of `Number_of_Priors` for the two ethnicity groups. To the left, the original distirbutions. To the right, the distributions after removal of disparate impact. 
 
-```{r dir, results='asis', fig.cap="(ref:dir-text)", echo=FALSE, message=FALSE, warning=FALSE}
+```{r dir, results='asis', fig.cap="(ref:dir-text)", out.width='100%', fig.height=3, echo=FALSE, message=FALSE, warning=FALSE}
 
 
 df_rem <- compas_train[,c("Number_of_Priors", "Ethnicity")]
@@ -364,9 +362,9 @@ yield a high accuracy. The plot below in figure \@ref(fig:fobject1) shows the me
 our fairness criterias from the fitted models. Note that the x-axis represent "parity loss"
 i.e. the distance from 1 of the fairness ratio.
 
-(ref:fobject1-text) All models evaluated against our two measures on fairness. The 0.2 line indicates the kind of unequality we would be willing to accept.
+(ref:fobject1-text) All models evaluated against our two measures on fairness. The 0.2 line indicates the kind of inequality we would be willing to accept.
 
-```{r fobject1, fig.cap="(ref:fobject1-text)", echo=FALSE, out.width='100%', results='hide', message=FALSE, warning=FALSE}
+```{r fobject1, fig.cap="(ref:fobject1-text)", fig.height = 3, fig.align = "center", echo=FALSE, out.width='100%', results='hide', message=FALSE, warning=FALSE}
 
 load("models/fobject1.Rdata")
 
@@ -374,8 +372,8 @@ fobject1.2 <- expand_fairness_object(fobject1)
 
 fobject_2 <- fobject1.2 %>% 
   filter(metric == "TPR" | metric == "STP") %>% 
-  mutate(metric = case_when(metric == "TPR" ~ "Equalized odds \nratio",
-                            metric == "STP"  ~ "Demographic parity \nratio"))
+  mutate(metric = case_when(metric == "TPR" ~ "Equalized odds",
+                            metric == "STP"  ~ "Demographic parity"))
   
 ggplot(fobject_2, aes(x = model, y = score, fill = model)) +
   geom_col() +
@@ -385,11 +383,11 @@ ggplot(fobject_2, aes(x = model, y = score, fill = model)) +
   labs(x = '', y = 'Fairness Metric (parity loss)', fill = 'Model') +
   scale_fill_brewer(palette="Set2") +
   facet_grid(metric ~ .) +
-  theme(text = element_text(size = 13))
+  theme(text = element_text(size = 11))
 
 ```
 
-Let us for simplicity solely consider demographic parity
+\noindent Let us for simplicity solely consider demographic parity
 (this also often referred to as statistical parity) as a measure from now on. We can
 then compare the acquired accuracy of each model together with parity loss
 evaluated by this measure (note the acquired accuracy is measured on training
@@ -412,7 +410,7 @@ x +
         axis.title=element_text(size=14), aspect.ratio = 0.7)
 ```
 
-Using demographic parity as a fairness measure
+\noindent Using demographic parity as a fairness measure
 none of our models would satisfy the 80% rule and thus disparate impact is present. Using
 the preprocessing techniques previously described we now fit the models on these
 processed datasets and compare which model and processing technique yields best
@@ -436,7 +434,7 @@ x +
         axis.title=element_text(size=14), aspect.ratio = 0.7)
 ```
 
-The resampling methods seems to have best effect on minimising parity loss
+\noindent The resampling methods seems to have best effect on minimising parity loss
 and the disparate impact removal technique even increase parity loss for
 some models. This is probably because of the reasons stated earlier about this method. However, most of the resampled models have a parity loss of less
 than 0.2 (i.e. they satisfy the 80% rule). Choosing the four most accurate of these
@@ -459,7 +457,7 @@ plot(ceteris_paribus_cutoff(fobject_co,
   scale_color_discrete(labels = c("Demographic parity", "Equalised odds")) 
   
 ```
-Applying the cutoff values from figure \@ref(fig:cutoff-rf) and comparing them
+\noindent Applying the cutoff values from figure \@ref(fig:cutoff-rf) and comparing them
 to models using 0.5 we can evaluate whether this drop in parity loss would
 be worth any potential drop in accuracy. This comparison can be seen in
 figure \@ref(fig:cutoff-rf). Adjusting cutoffs can have quite large effect,
@@ -497,7 +495,7 @@ satisfactory performance on test data as well, however, it no longer meets the
 80% criterion and unfortunately it also has the lowest accuracy among all models
 fitted.
 
-(ref:fap-test-text) All fitted models and their respective bias-mitigated version, evaluated on previously unseen test data. As aspected, accuracy is slightly lower than for the training data. We can also note that only four of the 16 models has a parity loss of 0.2 or higher. 
+(ref:fap-test-text) All fitted models and their respective bias-mitigated version, evaluated on previously unseen test data. As aspected, accuracy is slightly lower than for the training data. We can also note that only four of the 16 models has a parity loss of 0.2 or smaller. 
 
 ```{r fap-test, echo=FALSE, fig.cap="(ref:fap-test-text)", out.width='100%', fig.height=6,  results='hide', message=FALSE, warning=FALSE}
 
@@ -513,18 +511,16 @@ plot(fap) +
 
 ```{r tabledata, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 
-### Varför vill inte denna bli en tabell??
-
 load("models/fobject_test.Rdata")
 fap <-  performance_and_fairness(fobject_test, fairness_metric = "STP", performance_metric = "accuracy")
+df_fap <- data.frame(fap$paf_data)
+df_fap[,1:2] <- round(df_fap[,1:2], 3)
 
 ```
 
 ```{r table-test, echo=FALSE,  results='asis', message=FALSE, warning=FALSE}
 
-### Varför vill inte denna bli en tabell??
-
-kable(data.frame(fap$paf_data), caption = "Model Performance and Fairness on Test Data",
+kable(df_fap, caption = "Model Performance and Fairness on Test Data",
       format = "latex", booktabs = T,
       col.names = c("Demographic parity",
                     "Accuracy",
@@ -559,7 +555,6 @@ The code is presented in the following way: First, we present the initial pre-pr
 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
-
 set.seed(123)
 compas <- fairmodels::compas
 compas <- filter(compas, Ethnicity == "African_American" | Ethnicity == "Caucasian")
@@ -580,11 +575,9 @@ resamples <- vfold_cv(compas_train, 5)
 ## Models
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
-
 ###########################
 #### RANDOM FOREST ########
 ###########################
-
 rf_mod <-
   rand_forest() %>%
   set_args(mtry = tune()) %>%
@@ -629,7 +622,6 @@ rf_test_exp <- update_data(rf_explainer, data = compas_test[,-1],
 ###########################
 ##### NEURAL NET ##########
 ###########################
-
 nn_mod <- 
   mlp(hidden_units = tune()) %>%
   set_engine("nnet") %>%
@@ -675,7 +667,6 @@ nn_test_exp <- update_data(nn_explainer, data = compas_test[,-1],
 #######################
 #### LOG REG ##########
 #######################
-
 lr_mod <- 
   logistic_reg(penalty = tune()) %>% 
   set_engine("glmnet") %>% 
@@ -720,8 +711,6 @@ lr_test_exp <- update_data(lr_explainer, data = compas_test[,-1],
 #######################
 #### KNN ##############
 #######################
-
-
 knn_mod <-
   nearest_neighbor(neighbors = tune()) %>%
   set_engine('kknn') %>%
@@ -765,7 +754,6 @@ rm(knn_mod, knn_rec, knn_wf, knn_res, final_knn_wf, knn_best)
 #######################
 #### BOOOSTING ########
 #######################
-
 ab_mod <- 
   boost_tree(mtry = tune()) %>% 
   set_engine("xgboost") %>% 
@@ -812,8 +800,6 @@ boost_test_exp <- update_data(boost_explainer, data = compas_test[,-1],
 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
-
-
 # Disparate impact remover
 compas_train_mit <- compas_train %>% 
   mutate(Number_of_Priors = as.numeric(Number_of_Priors)) %>% 
